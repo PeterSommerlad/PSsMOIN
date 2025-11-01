@@ -11,12 +11,6 @@
 *.gch
 *.pch
 
-# Linker files
-*.ilk
-
-# Debugger Files
-*.pdb
-
 # Compiled Dynamic libraries
 *.so
 *.dylib
@@ -37,5 +31,13 @@
 *.out
 *.app
 
-# debug information files
-*.dwo
+.DS_Store
+
+Release
+Debug
+.metadata/
+.settings/
+*Test.xml
+.*.html
+*.asm
+build/
