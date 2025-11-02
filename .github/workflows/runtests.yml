@@ -1,0 +1,53 @@
+name: pssmoin-tests
+on: [push]
+jobs:
+  run-all-tests:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+      - name: create build directory
+        run: mkdir -p -v ${{github.workspace}}/build
+        
+      - name: Configure CMake
+        working-directory: ${{github.workspace}}/build
+        shell: bash
+        env:
+          CC:   gcc
+          CXX:  g++
+        run: cmake ${{github.workspace}}/cevelop-workspace/PSsMOIN/
+        
+      - name: Build
+        working-directory: ${{github.workspace}}/build
+        shell: bash
+        env:
+          CC:   gcc
+          CXX:  g++
+        run: cmake --build . -- CXX_FLAGS="-std=c++20 -O2"
+        
+      - name: Test
+        working-directory: ${{github.workspace}}/build
+        run: ctest --output-on-failure
+        
+      - name: create build directory
+        run: mkdir -p -v ${{github.workspace}}/build2
+
+      - name: Configure CMake
+        working-directory: ${{github.workspace}}/build2
+        shell: bash
+        env:
+          CC:   gcc
+          CXX:  g++
+        run: cmake ${{github.workspace}}/cevelop-workspace/PSsMOINwithStruct/
+        
+      - name: Build
+        working-directory: ${{github.workspace}}/build2
+        shell: bash
+        env:
+          CC:   gcc
+          CXX:  g++
+        run: cmake --build . -- CXX_FLAGS="-std=c++20 -O2"
+        
+      - name: Test
+        working-directory: ${{github.workspace}}/build2
+        run: ctest --output-on-failure
+
