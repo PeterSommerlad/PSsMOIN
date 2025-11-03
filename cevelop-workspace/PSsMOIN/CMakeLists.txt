@@ -2,7 +2,7 @@
 
 cmake_minimum_required(VERSION 3.10)
 
-project(PSSafeIntTests)
+project(PSsMOIN)
 
 
 set(CMAKE_CXX_STANDARD 20)
@@ -13,26 +13,16 @@ if (NOT CMAKE_BUILD_TYPE)
   message("No build type specified, defaulting to Debug (no optimizations, include debug symbols), use -DCMAKE_BUILD_TYPE=RelWithDebInfo or =Release to build a release)")
 endif()
 
-if (CMAKE_BUILD_TYPE MATCHES "Debug")
-
-elseif (CMAKE_BUILD_TYPE MATCHES "Release")
-  add_compile_definitions(NDEBUG)
-elseif (CMAKE_BUILD_TYPE MATCHES "Throw")
-  add_compile_definitions(PS_ASSERT_TRHOWS)
-else ()
-  message("unsupported build type...")
-endif()
-
 
 file(GLOB SOURCES src/*.cpp)
 
-add_executable(PSSafeIntTests ${SOURCES} )
+add_executable(PSsMOIN ${SOURCES} )
 
-target_include_directories(PSSafeIntTests PRIVATE ${PROJECT_SOURCE_DIR}/src ${PROJECT_SOURCE_DIR}/cute)
+target_include_directories(PSsMOIN PRIVATE ${PROJECT_SOURCE_DIR}/src ${PROJECT_SOURCE_DIR}/cute)
 
 enable_testing()
 
-add_test(NAME test COMMAND PSSafeIntTests)
+add_test(NAME test COMMAND PSsMOIN)
 
 
 message("")

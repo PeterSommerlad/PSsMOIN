@@ -1,9 +1,8 @@
 #include "TestForThrowingAsserts.h"
 #include "cute.h"
 
-// cannot #define NDEBUG here, because of ODR, must use consistently on all configs
 #include "moins.h"
-    using namespace moins;
+using namespace moins;
 
 void DivisionByZeroThrows() {
     constexpr auto divisor = 0_si8;

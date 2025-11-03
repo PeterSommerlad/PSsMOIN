@@ -25,7 +25,7 @@
 #endif
 
 #define ps_assert( cond, msg) \
-   if (not (cond)) { PSSMOIN_RAISE_SIGFPE() ; throw(#msg); } ;
+   if (not (cond)) { PSSMOIN_RAISE_SIGFPE() ; throw(msg); } ;
 
 
 // no NDEBUG-like support, because we want safety!

@@ -1,0 +1,79 @@
+<testsuites>
+	<testsuite name="AllTests pssmoin" tests="43">
+		<testcase classname="AllTests pssmoin" name="ui16intExists"/>
+		<testcase classname="AllTests pssmoin" name="ui16NotEqualAutomaticInCpp20"/>
+		<testcase classname="AllTests pssmoin" name="ui16canbeadded"/>
+		<testcase classname="AllTests pssmoin" name="ui16canbeaddedto"/>
+		<testcase classname="AllTests pssmoin" name="ui16canbesubtracted"/>
+		<testcase classname="AllTests pssmoin" name="ui16canbesubtractedfrom"/>
+		<testcase classname="AllTests pssmoin" name="ui16canbemultiplied"/>
+		<testcase classname="AllTests pssmoin" name="ui16canbemultipliedwith"/>
+		<testcase classname="AllTests pssmoin" name="ui16canbedivided"/>
+		<testcase classname="AllTests pssmoin" name="ui16canbedividedby"/>
+		<testcase classname="AllTests pssmoin" name="ui16canbemoduloed"/>
+		<testcase classname="AllTests pssmoin" name="ui16canbemoduloedby"/>
+		<testcase classname="AllTests pssmoin" name="ui16canbeandedwith"/>
+		<testcase classname="AllTests pssmoin" name="ui16canbeanded"/>
+		<testcase classname="AllTests pssmoin" name="ui16canbeored"/>
+		<testcase classname="AllTests pssmoin" name="ui16canbeoredwith"/>
+		<testcase classname="AllTests pssmoin" name="ui16canbexoredwith"/>
+		<testcase classname="AllTests pssmoin" name="ui16canbexored"/>
+		<testcase classname="AllTests pssmoin" name="ui16canbenegated"/>
+		<testcase classname="AllTests pssmoin" name="ui16canbeleftshifted"/>
+		<testcase classname="AllTests pssmoin" name="ui16canbeleftshiftedby"/>
+		<testcase classname="AllTests pssmoin" name="ui16canberightshifted"/>
+		<testcase classname="AllTests pssmoin" name="ui16canberightshiftedby"/>
+		<testcase classname="AllTests pssmoin" name="si8canbeaddednormal"/>
+		<testcase classname="AllTests pssmoin" name="si8Negation"/>
+		<testcase classname="AllTests pssmoin" name="si8negationminintidempotent"/>
+		<testcase classname="AllTests pssmoin" name="si8overflowmakesitNegative"/>
+		<testcase classname="AllTests pssmoin" name="si8subtraction"/>
+		<testcase classname="AllTests pssmoin" name="si8subtractionwraps"/>
+		<testcase classname="AllTests pssmoin" name="si8multiplication"/>
+		<testcase classname="AllTests pssmoin" name="si8division"/>
+		<testcase classname="AllTests pssmoin" name="ui16canbepreincremented"/>
+		<testcase classname="AllTests pssmoin" name="ui16canbepostincremented"/>
+		<testcase classname="AllTests pssmoin" name="ui16canbepredecremented"/>
+		<testcase classname="AllTests pssmoin" name="ui16canbepostdecremented"/>
+		<testcase classname="AllTests pssmoin" name="checkedFromInt"/>
+		<testcase classname="AllTests pssmoin" name="si8OutputAsInteger"/>
+		<testcase classname="AllTests pssmoin" name="ui8OutputAsInteger"/>
+		<testcase classname="AllTests pssmoin" name="ui16canbecompared"/>
+		<testcase classname="AllTests pssmoin" name="ui16canNotbecomparedwithui8"/>
+		<testcase classname="AllTests pssmoin" name="ui32CanNotbeComparedwithlong"/>
+		<testcase classname="AllTests pssmoin" name="signedIntegerBoundaryTestResultRecovery"/>
+		<testcase classname="AllTests pssmoin" name="DemonstrateWrapAround"/>
+	</testsuite>
+	<testsuite name="CodeGenBenchmark" tests="22">
+		<testcase classname="CodeGenBenchmark" name="codegenAdditionTest"/>
+		<testcase classname="CodeGenBenchmark" name="testUBSanWithSignedOverflow"/>
+		<testcase classname="CodeGenBenchmark" name="testNoSignedOverflow"/>
+		<testcase classname="CodeGenBenchmark" name="codegenMultiplicationTest"/>
+		<testcase classname="CodeGenBenchmark" name="codegenSumThirdsTest"/>
+		<testcase classname="CodeGenBenchmark" name="codegenSubtractionTest"/>
+		<testcase classname="CodeGenBenchmark" name="int32::codegenAdditionTest"/>
+		<testcase classname="CodeGenBenchmark" name="int32::codegenMultiplicationTest"/>
+		<testcase classname="CodeGenBenchmark" name="int32::codegenSumThirdsTest"/>
+		<testcase classname="CodeGenBenchmark" name="int32::codegenSubtractionTest"/>
+		<testcase classname="CodeGenBenchmark" name="uint32::codegenAdditionTest"/>
+		<testcase classname="CodeGenBenchmark" name="uint32::codegenMultiplicationTest"/>
+		<testcase classname="CodeGenBenchmark" name="uint32::codegenSumThirdsTest"/>
+		<testcase classname="CodeGenBenchmark" name="uint32::codegenSubtractionTest"/>
+		<testcase classname="CodeGenBenchmark" name="int16::codegenAdditionTest"/>
+		<testcase classname="CodeGenBenchmark" name="int16::codegenMultiplicationTest"/>
+		<testcase classname="CodeGenBenchmark" name="int16::codegenSumThirdsTest"/>
+		<testcase classname="CodeGenBenchmark" name="int16::codegenSubtractionTest"/>
+		<testcase classname="CodeGenBenchmark" name="int64::codegenAdditionTest"/>
+		<testcase classname="CodeGenBenchmark" name="int64::codegenMultiplicationTest"/>
+		<testcase classname="CodeGenBenchmark" name="int64::codegenSumThirdsTest"/>
+		<testcase classname="CodeGenBenchmark" name="int64::codegenSubtractionTest"/>
+	</testsuite>
+	<testsuite name="TestForThrowingAsserts" tests="6">
+		<testcase classname="TestForThrowingAsserts" name="DivisionByZeroThrows"/>
+		<testcase classname="TestForThrowingAsserts" name="ModuloByZeroThrows"/>
+		<testcase classname="TestForThrowingAsserts" name="ShiftLeftByTooManyBitsThrows"/>
+		<testcase classname="TestForThrowingAsserts" name="ShiftRightByTooManyBitsThrows"/>
+		<testcase classname="TestForThrowingAsserts" name="cppnowtalk::testUBforint"/>
+		<testcase classname="TestForThrowingAsserts" name="cppnowtalk::testNoUBforunsigned"/>
+	</testsuite>
+</testsuites>
