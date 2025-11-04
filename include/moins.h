@@ -168,7 +168,31 @@ same_signedness_v = std::numeric_limits<LEFT>::is_signed == std::numeric_limits<
 template<typename LEFT, typename RIGHT>
 concept same_signedness = same_signedness_v<LEFT,RIGHT>;
 
+// the following are not really needed for class types,
+// because of the availability of constructors, kept for symmetry
 
+// path tests are compile-time checked:
+template<a_moduloint TO, sized_integer FROM>
+[[nodiscard]]
+constexpr auto
+from_int_to(FROM val)
+{
+    using result_t = TO;
+    using ultr = ULT<result_t>;
+    if constexpr(std::is_unsigned_v<ultr>){
+        ps_assert(  (val >= FROM{} && // in case FROM is signed
+                     static_cast<std::make_unsigned_t<FROM>>(val) <= std::numeric_limits<ultr>::max()), "from_int_to: integer value out of range") ;
+    } else {
+        if constexpr (std::is_unsigned_v<FROM>){
+            ps_assert(  val <= static_cast<std::make_unsigned_t<ultr>>(std::numeric_limits<ultr>::max()), "from_int_to: integer value out of range");
+
+        } else { // both are signed
+            ps_assert(  (val <= std::numeric_limits<ultr>::max() &&
+                                val >= std::numeric_limits<ultr>::min()),  "from_int_to:  integer value out of range");
+        }
+    }
+    return static_cast<result_t>(static_cast<ultr>(val)); // cast is checked above
+}
 
 template<sized_integer INT>
 struct Moin{
@@ -180,19 +204,7 @@ struct Moin{
     template<std::integral FROM>
     explicit constexpr Moin(FROM v)
     requires (not std::same_as<INT,detail_::plain<FROM>>)
-    :value_which_should_not_be_referred_to_from_user_code(v){
-        if constexpr(std::is_unsigned_v<INT>){
-            ps_assert(  (v >= FROM{} && // in case FROM is signed
-                         static_cast<std::make_unsigned_t<FROM>>(v) <= std::numeric_limits<INT>::max()), "moins: integer value out of range") ;
-        } else {
-            if constexpr (std::is_unsigned_v<FROM>){
-                ps_assert(  v <= static_cast<std::make_unsigned_t<INT>>(std::numeric_limits<INT>::max()), "moins: integer value out of range");
-
-            } else { // both are signed
-                ps_assert(  (v <= std::numeric_limits<INT>::max() &&
-                                    v >= std::numeric_limits<INT>::min()), "moins: integer value out of range");
-            }
-        }
+    :value_which_should_not_be_referred_to_from_user_code{from_int_to<Moin>(v)}{
     }
 
     // member/friend operators
@@ -586,10 +598,6 @@ auto operator""_si64(unsigned long long value) {
     }
 }
 } // NS literals
-
-// the following are not really needed for class types,
-// because of the availability of constructors, kept for symmetry
-
 template<sized_integer T>
 [[nodiscard]]
 constexpr auto
@@ -608,28 +616,7 @@ from_int(T value) noexcept {
                    conditional_t<is_compatible_integer_v<std::int64_t,T>, si64, cannot_convert_integer>>>>>>>>;
     return static_cast<result_t>(value); // no need to check, result_t corresponds to input T's range
 }
-// path tests are compile-time checked:
-template<a_moduloint TO, sized_integer FROM>
-[[nodiscard]]
-constexpr auto
-from_int_to(FROM val)
-{
-    using result_t = TO;
-    using ultr = ULT<result_t>;
-    if constexpr(std::is_unsigned_v<ultr>){
-        ps_assert(  (val >= FROM{} && // in case FROM is signed
-                     static_cast<std::make_unsigned_t<FROM>>(val) <= std::numeric_limits<ultr>::max()), "from_int_to: integer value out of range") ;
-    } else {
-        if constexpr (std::is_unsigned_v<FROM>){
-            ps_assert(  val <= static_cast<std::make_unsigned_t<ultr>>(std::numeric_limits<ultr>::max()), "from_int_to: integer value out of range");
 
-        } else { // both are signed
-            ps_assert(  (val <= std::numeric_limits<ultr>::max() &&
-                                val >= std::numeric_limits<ultr>::min()),  "from_int_to:  integer value out of range");
-        }
-    }
-    return static_cast<result_t>(val); // cast is checked above
-}
 
 } // NS moins
 

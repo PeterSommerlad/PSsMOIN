@@ -47,7 +47,8 @@ check_expr_does_compile(   ,  ui8 , ( 11_ui8  % 3_ui8) ) // mod
 check_does_compile(not,  ui8 , + 1_si8 + ) // mixed
 check_does_compile(   ,  ui8 , + 255_ui8 + 1_ui8 + ) // wrap
 
-
+check_does_compile(not, si8, + si8(128) + ) // cannot cast too large value
+check_does_compile(   , si8, + si8(127) + ) // cannot cast too large value
 
 }
 
@@ -529,6 +530,8 @@ static_assert(min_8  / v2_64 == -64_si64 );
 static_assert(min_8  / v2_32 == -64_si32 );
 static_assert(min_8  / v2_16 == -64_si16 );
 static_assert(min_8  / v2_8  == -64_si8 );
+
+
 
 
 static_assert(-100_si32 / -9_si64 == 11_si64);
