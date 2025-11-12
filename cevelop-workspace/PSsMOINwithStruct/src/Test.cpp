@@ -1,21 +1,21 @@
 #include "moins.h"
-#include "TestForThrowingAsserts.h"
 #include "cute.h"
 #include "ide_listener.h"
 #include "xml_listener.h"
 #include "cute_runner.h"
 #include "CodeGenBenchmark.h"
+#include "TestForThrowingAsserts.h"
 #include <type_traits>
 #include <cstddef>
 
 
 
 using namespace moins::literals;
-
+using namespace moins;
 
 void signedIntegerBoundaryTestResultRecovery(){
     // temporary testcase for getting static_asserts above right
-    ASSERT_EQUAL(0x8000'0000_si64, std::numeric_limits<moins::si32>::max() + 1_si64  );
+    ASSERT_EQUAL(0x8000'0000_si64, std::numeric_limits<si32>::max() + 1_si64  );
 }
 
 
@@ -26,7 +26,6 @@ void signedIntegerBoundaryTestResultRecovery(){
 
 
 void ui16intExists() {
-    using moins::ui16;
     auto large=0xff00_ui16;
     //0x10000_ui16; // compile error
     //ui16{0xfffff}; // narrowing detection
@@ -197,7 +196,7 @@ void ui32CanNotbeComparedwithlong(){
 
 //    ASSERTM("check comparison", l != s && s < l && l >= s && !(l < s) && ! (l <= s));
 
-    auto ss = moins::from_int(s);
+    auto ss = from_int(s);
     ASSERTM("check comparison", l != ss && ss < l && l >= ss && !(l < ss) && ! (l <= ss));
 
 }
@@ -210,11 +209,11 @@ void si8canbeaddednormal(){
 }
 
 void si8Negation(){
-    ASSERT_EQUAL(-1,moins::detail_::promote_keep_signedness(-1_si8));
+    ASSERT_EQUAL(-1,promote_keep_signedness(-1_si8));
 }
 
 void si8negationminintidempotent(){
-    auto x = moins::detail_::promote_keep_signedness(-(1_si8+127_si8));
+    auto x = promote_keep_signedness(-(1_si8+127_si8));
     static_assert(std::is_integral_v<decltype(x)>);
     ASSERT_EQUAL(-128,+x);
 }

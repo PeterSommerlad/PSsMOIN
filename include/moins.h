@@ -80,7 +80,7 @@ namespace detail_ {
 
 
 template<sized_integer INT>
-struct Moin;
+struct [[nodiscard]] Moin;
 
 namespace detail_{
 template<typename T>
@@ -101,7 +101,6 @@ concept a_moduloint = detail_::is_moduloint_v<E>;
 template<typename C>
 using ULT=detail_::ULT_impl<detail_::plain<C>>::type;
 
-namespace detail_ {
 
 template<typename E>
 using promoted_t = // will promote the underlying type keeping signedness
@@ -118,6 +117,7 @@ promote_keep_signedness(E value) noexcept
 { // promote keeping signedness
     return static_cast<promoted_t<E>>((value.value_which_should_not_be_referred_to_from_user_code));// promote with sign extension
 }
+namespace detail_ {
 
 
 template<a_moduloint E>
@@ -146,7 +146,7 @@ abs_promoted_and_extended_as_unsigned(E val) noexcept
  requires (std::numeric_limits<TARGET>::is_signed)
 { // promote to unsigned for wrap around arithmetic removing sign if negative
   // return just the bits for std::numeric_limits<TARGET>::min()
-       using promoted_t = detail_::promoted_t<E>;
+       using promoted_t = promoted_t<E>;
        using u_result_t = std::conditional_t< (sizeof(TARGET) > sizeof(promoted_t)),
                 std::make_unsigned_t<TARGET>, std::make_unsigned_t<promoted_t > >;
        static_assert(std::is_unsigned_v<u_result_t>);
@@ -194,8 +194,12 @@ from_int_to(FROM val)
     return static_cast<result_t>(static_cast<ultr>(val)); // cast is checked above
 }
 
+constexpr auto to_underlying(moins::a_moduloint auto v){
+    return v.value_which_should_not_be_referred_to_from_user_code;
+}
+
 template<sized_integer INT>
-struct Moin{
+struct [[nodiscard]] Moin{
     constexpr Moin() noexcept:value_which_should_not_be_referred_to_from_user_code{}{}
     explicit constexpr Moin(std::same_as<INT> auto v) noexcept:value_which_should_not_be_referred_to_from_user_code(v){
     }
@@ -395,8 +399,6 @@ struct Moin{
     operator&(Moin l, RIGHT r) noexcept
     requires std::is_unsigned_v<ULT<Moin>> && std::is_unsigned_v<ULT<RIGHT>>
     {
-        using detail_::promote_keep_signedness;
-
         using result_t=std::conditional_t<sizeof(Moin)>=sizeof(RIGHT),Moin,RIGHT>;
         return static_cast<result_t>(promote_keep_signedness(l)&promote_keep_signedness(r));
     }
@@ -415,7 +417,6 @@ struct Moin{
     operator|(Moin l, RIGHT r) noexcept
     requires std::is_unsigned_v<ULT<Moin>> && std::is_unsigned_v<ULT<RIGHT>>
     {
-        using detail_::promote_keep_signedness;
         using result_t=std::conditional_t<sizeof(Moin)>=sizeof(RIGHT),Moin,RIGHT>;
         return static_cast<result_t>(promote_keep_signedness(l)|promote_keep_signedness(r));
     }
@@ -434,8 +435,6 @@ struct Moin{
     operator^(Moin l, RIGHT r) noexcept
     requires std::is_unsigned_v<ULT<Moin>> && std::is_unsigned_v<ULT<RIGHT>>
     {
-        using detail_::promote_keep_signedness;
-
         using result_t=std::conditional_t<sizeof(Moin)>=sizeof(RIGHT),Moin,RIGHT>;
         return static_cast<result_t>(promote_keep_signedness(l)^promote_keep_signedness(r));
     }
@@ -454,7 +453,7 @@ struct Moin{
     operator~() noexcept
     requires std::is_unsigned_v<ULT<Moin>>
     {
-        return Moin(static_cast<INT>(~detail_::promote_keep_signedness(*this)));
+        return Moin(static_cast<INT>(~ promote_keep_signedness(*this)));
     }
 
 
@@ -463,7 +462,6 @@ struct Moin{
     operator<<(Moin l, RIGHT r)
     requires std::is_unsigned_v<ULT<Moin>> && std::is_unsigned_v<ULT<RIGHT>>
     {
-        using detail_::promote_keep_signedness;
         ps_assert( static_cast<size_t>(promote_keep_signedness(r)) < sizeof(Moin)*CHAR_BIT , "moins: trying to left-shift by too many bits");
         return static_cast<Moin>(promote_keep_signedness(l)<<promote_keep_signedness(r));
     }
@@ -479,7 +477,7 @@ struct Moin{
     friend constexpr Moin
     operator>>(Moin l, RIGHT r)
     requires std::is_unsigned_v<ULT<Moin>> && std::is_unsigned_v<ULT<RIGHT>>
-    {   using detail_::promote_keep_signedness;
+    {
         ps_assert( static_cast<size_t>(promote_keep_signedness(r)) < sizeof(Moin)*CHAR_BIT , "moins: trying to right-shift by too many bits");
         return static_cast<Moin>(promote_keep_signedness(l)>>promote_keep_signedness(r));
     }
@@ -494,7 +492,7 @@ struct Moin{
 
 
     friend std::ostream& operator<<(std::ostream &out, Moin value){
-        out << detail_::promote_keep_signedness(value);
+        out << promote_keep_signedness(value);
         return out;
     }
     // no need for private, makes compilability checks possible

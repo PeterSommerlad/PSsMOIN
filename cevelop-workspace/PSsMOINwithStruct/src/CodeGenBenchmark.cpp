@@ -33,7 +33,7 @@ struct operations {
 };
 
 std::initializer_list<int8_t> i8_seed{1,1,2,3,5,8/*,13,21,34,55,89*/};
-std::initializer_list<moins::si8> si8_seed{1_si8,1_si8,2_si8,3_si8,5_si8,8_si8/*,13_si8,21_si8,34_si8,55_si8,89_si8*/};
+std::initializer_list<si8> si8_seed{1_si8,1_si8,2_si8,3_si8,5_si8,8_si8/*,13_si8,21_si8,34_si8,55_si8,89_si8*/};
 
 auto sum(operations<int8_t> const &ops){
     return ops.sum();
@@ -63,7 +63,6 @@ auto sumnegative(operations<si8> const &ops){
 
 
 
-using moins::detail_::promote_keep_signedness;
 void codegenAdditionTest() {
     auto resi8 = sum(operations<int8_t>{i8_seed});
     auto ressi8 =sum( operations<si8>{si8_seed});
@@ -91,7 +90,7 @@ void codegenSubtractionTest(){
 
 namespace int16 {
 std::initializer_list<int16_t> i16_seed{1,1,2,3,5,8,13,21,34,55};
-std::initializer_list<moins::si16> si16_seed{1_si16,1_si16,2_si16,3_si16,5_si16,8_si16,13_si16,21_si16,34_si16,55_si16};
+std::initializer_list<si16> si16_seed{1_si16,1_si16,2_si16,3_si16,5_si16,8_si16,13_si16,21_si16,34_si16,55_si16};
 
 auto sum(operations<int16_t> const &ops){
     return ops.sum();
@@ -148,7 +147,7 @@ void codegenSubtractionTest(){
 }
 namespace int32 {
 std::initializer_list<int32_t> i32_seed{1,1,2,3,5,8,13,21,34,55,89};
-std::initializer_list<moins::si32> si32_seed{1_si32,1_si32,2_si32,3_si32,5_si32,8_si32,13_si32,21_si32,34_si32,55_si32,89_si32};
+std::initializer_list<si32> si32_seed{1_si32,1_si32,2_si32,3_si32,5_si32,8_si32,13_si32,21_si32,34_si32,55_si32,89_si32};
 
 auto sum(operations<int32_t> const &ops){
     return ops.sum();
@@ -206,7 +205,7 @@ void codegenSubtractionTest(){
 namespace int64 {
 constexpr std::initializer_list<int64_t> i64_seed{1,1,2,3,5,8,13,21,34,55,89,
                                         144,233,377,610};
-constexpr std::initializer_list<moins::si64> si64_seed{1_si64,1_si64,2_si64,3_si64,5_si64,8_si64,13_si64,21_si64,34_si64,55_si64,89_si64,
+constexpr std::initializer_list<si64> si64_seed{1_si64,1_si64,2_si64,3_si64,5_si64,8_si64,13_si64,21_si64,34_si64,55_si64,89_si64,
     144_si64,233_si64,377_si64,610_si64};
 
 auto sum(operations<int64_t> const &ops){
@@ -264,7 +263,7 @@ void codegenSubtractionTest(){
 }
 namespace uint32 {
 std::initializer_list<uint32_t> ui32_seed{1,1,2,3,5,8,13,21,34,55,89};
-std::initializer_list<moins::ui32> uui32_seed{1_ui32,1_ui32,2_ui32,3_ui32,5_ui32,8_ui32,13_ui32,21_ui32,34_ui32,55_ui32,89_ui32};
+std::initializer_list<ui32> uui32_seed{1_ui32,1_ui32,2_ui32,3_ui32,5_ui32,8_ui32,13_ui32,21_ui32,34_ui32,55_ui32,89_ui32};
 
 auto sum(operations<uint32_t> const &ops){
     return ops.sum();

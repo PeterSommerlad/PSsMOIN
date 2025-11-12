@@ -127,7 +127,7 @@ si64 operator""_si64(unsigned long long val) {
 }
 
 
-
+namespace detail_ {
 
 template<typename T>
 using plain = std::remove_cvref_t<T>;
@@ -135,12 +135,11 @@ using plain = std::remove_cvref_t<T>;
 template<typename T>
 concept an_enum = std::is_enum_v<plain<T>>;
 
-
-namespace detail_ {
-// from C++23
 template<an_enum T>
 constexpr bool
 is_scoped_enum_v = !std::is_convertible_v<T, std::underlying_type_t<T>>;
+
+// from C++23
 
 template<typename T>
 concept a_scoped_enum = is_scoped_enum_v<T>;
@@ -150,11 +149,11 @@ concept a_scoped_enum = is_scoped_enum_v<T>;
 
 template<typename T>
 constexpr bool
-is_safeint_v = false;
+is_moduloint_v = false;
 
 template<a_scoped_enum E>
 constexpr bool
-is_safeint_v<E> = requires { E{} == E::tag_to_prevent_mixing_other_enums; } ;
+is_moduloint_v<E> = requires { E{} == E::tag_to_prevent_mixing_other_enums; } ;
 
 template<typename E>
 using ULT=std::conditional_t<std::is_enum_v<plain<E>>,std::underlying_type_t<plain<E>>,plain<E>>;
@@ -167,18 +166,25 @@ using promoted_t = // will promote keeping signedness
                 , int >
             , ULT<E>>;
 
+
+
 }
 
-
+using detail_::ULT;
 template<typename E>
-concept a_safeint = detail_::is_safeint_v<E>;
+concept a_moduloint = detail_::is_moduloint_v<E>;
+
+
 
 
 namespace detail_{
 
-template<a_safeint LEFT, a_safeint RIGHT>
+
+
+
+template<a_moduloint LEFT, a_moduloint RIGHT>
 constexpr bool
-same_signedness_v = detail_::is_safeint_v<LEFT> && detail_::is_safeint_v<RIGHT> && std::numeric_limits<LEFT>::is_signed == std::numeric_limits<RIGHT>::is_signed;
+same_signedness_v = is_moduloint_v<LEFT> && is_moduloint_v<RIGHT> && std::numeric_limits<LEFT>::is_signed == std::numeric_limits<RIGHT>::is_signed;
 
 template<typename CHAR>
 constexpr bool
@@ -194,34 +200,31 @@ is_chartype_v =    std::is_same_v<char,CHAR>
 
 template<typename INT, typename TESTED>
 constexpr bool
-is_compatible_integer_v = std::is_same_v<TESTED,INT> ||
-   (   std::is_integral_v<TESTED>
-   && !std::is_same_v<bool,TESTED>
-   && !is_chartype_v<TESTED>
-   && (std::is_unsigned_v<INT> == std::is_unsigned_v<TESTED>)
-   && std::numeric_limits<TESTED>::max() == std::numeric_limits<INT>::max() );
+is_compatible_integer_v = std::is_same_v<plain<TESTED>,INT> ||
+   (   std::is_integral_v<plain<TESTED>>
+   && !std::is_same_v<bool,plain<TESTED>>
+   && !is_chartype_v<plain<TESTED>>
+   && (std::is_unsigned_v<INT> == std::is_unsigned_v<plain<TESTED>>)
+   && std::numeric_limits<plain<TESTED>>::max() == std::numeric_limits<INT>::max() );
 
-template<typename INT, typename TESTED>
-constexpr bool
-is_similar_v=is_compatible_integer_v<INT,TESTED>;
 
 template<typename TESTED>
 constexpr bool
-is_known_integer_v =    is_similar_v<std::uint8_t,  TESTED>
-                     || is_similar_v<std::uint16_t, TESTED>
-                     || is_similar_v<std::uint32_t, TESTED>
-                     || is_similar_v<std::uint64_t, TESTED>
-                     || is_similar_v<std::int8_t,  TESTED>
-                     || is_similar_v<std::int16_t, TESTED>
-                     || is_similar_v<std::int32_t, TESTED>
-                     || is_similar_v<std::int64_t, TESTED>;
+is_known_integer_v =    is_compatible_integer_v<std::uint8_t,  TESTED>
+                     || is_compatible_integer_v<std::uint16_t, TESTED>
+                     || is_compatible_integer_v<std::uint32_t, TESTED>
+                     || is_compatible_integer_v<std::uint64_t, TESTED>
+                     || is_compatible_integer_v<std::int8_t,  TESTED>
+                     || is_compatible_integer_v<std::int16_t, TESTED>
+                     || is_compatible_integer_v<std::int32_t, TESTED>
+                     || is_compatible_integer_v<std::int64_t, TESTED>;
 
 }
 
 template<typename LEFT, typename RIGHT>
 concept same_signedness = detail_::same_signedness_v<LEFT,RIGHT>;
 
-template<a_safeint E>
+template<a_moduloint E>
 [[nodiscard]]
 constexpr auto
 promote_keep_signedness(E val) noexcept
@@ -229,16 +232,16 @@ promote_keep_signedness(E val) noexcept
     return static_cast<detail_::promoted_t<E>>(val);// promote with sign extension
 }
 
-// not used in framework:
-template<a_safeint E>
+// not used in framework but in tests:
+template<a_moduloint E>
 [[nodiscard]]
 constexpr auto
 to_underlying(E val) noexcept 
 { // plain value with all bad properties
-    return static_cast<std::underlying_type_t<E>>(val);
+    return static_cast<ULT<E>>(val);
 }
 
-template<a_safeint E>
+template<a_moduloint E>
 [[nodiscard]]
 constexpr auto
 promote_to_unsigned(E val) noexcept
@@ -252,7 +255,7 @@ template<typename T>
 concept an_integer = detail_::is_known_integer_v<T>;
 
 namespace detail_{
-template<an_integer TARGET, a_safeint E>
+template<an_integer TARGET, a_moduloint E>
 [[nodiscard]]
 constexpr auto
 promote_and_extend_to_unsigned(E val) noexcept
@@ -262,7 +265,7 @@ promote_and_extend_to_unsigned(E val) noexcept
        using s_result_t = std::make_signed_t<u_result_t>;
        return static_cast<u_result_t>(static_cast<s_result_t>(promote_keep_signedness(val)));// promote with sign extension
 }
-template<an_integer TARGET, a_safeint E>
+template<an_integer TARGET, a_moduloint E>
 [[nodiscard]]
 constexpr auto
 abs_promoted_and_extended_as_unsigned(E val) noexcept
@@ -291,27 +294,27 @@ template<an_integer T>
 [[nodiscard]]
 constexpr auto
 from_int(T val) noexcept {
-    using detail_::is_similar_v;
+    using detail_::is_compatible_integer_v;
     using std::conditional_t;
     struct cannot_convert_integer{};
     using result_t =
-            conditional_t<is_similar_v<std::uint8_t,T>, ui8,
-             conditional_t<is_similar_v<std::uint16_t,T>, ui16,
-              conditional_t<is_similar_v<std::uint32_t,T>, ui32,
-               conditional_t<is_similar_v<std::uint64_t,T>, ui64,
-                conditional_t<is_similar_v<std::int8_t,T>, si8,
-                 conditional_t<is_similar_v<std::int16_t,T>, si16,
-                  conditional_t<is_similar_v<std::int32_t,T>, si32,
-                   conditional_t<is_similar_v<std::int64_t,T>, si64, cannot_convert_integer>>>>>>>>;
+            conditional_t<is_compatible_integer_v<std::uint8_t,T>, ui8,
+             conditional_t<is_compatible_integer_v<std::uint16_t,T>, ui16,
+              conditional_t<is_compatible_integer_v<std::uint32_t,T>, ui32,
+               conditional_t<is_compatible_integer_v<std::uint64_t,T>, ui64,
+                conditional_t<is_compatible_integer_v<std::int8_t,T>, si8,
+                 conditional_t<is_compatible_integer_v<std::int16_t,T>, si16,
+                  conditional_t<is_compatible_integer_v<std::int32_t,T>, si32,
+                   conditional_t<is_compatible_integer_v<std::int64_t,T>, si64, cannot_convert_integer>>>>>>>>;
     return static_cast<result_t>(val);
 }
-template<a_safeint TO, an_integer FROM>
+template<a_moduloint TO, an_integer FROM>
 [[nodiscard]]
 constexpr auto
 from_int_to(FROM val)
 {
     using result_t = TO;
-    using ultr = std::underlying_type_t<result_t>;
+    using ultr = ULT<result_t>;
     if constexpr(std::is_unsigned_v<ultr>){
         ps_assert(  (val >= FROM{} && // in case FROM is signed
                      static_cast<std::make_unsigned_t<FROM>>(val) <= std::numeric_limits<ultr>::max()), "from_int_to: integer value out of range") ;
@@ -331,16 +334,9 @@ from_int_to(FROM val)
 // comparison
 // not needed, we won't mix types in comparison.
 
-//template<a_safeint E>
-//constexpr auto
-//operator<=>(E l, E r) noexcept
-//{
-//	return l <=> r;
-//}
-
 
 // negation for signed types only, two's complement
-template<a_safeint E>
+template<a_moduloint E>
 constexpr E
 operator-(E l) noexcept
 requires std::numeric_limits<E>::is_signed
@@ -350,14 +346,14 @@ requires std::numeric_limits<E>::is_signed
 
 // increment/decrement
 
-template<a_safeint E>
+template<a_moduloint E>
 constexpr E&
 operator++(E& l) noexcept
 {
     return l = static_cast<E>(1u + promote_to_unsigned(l));
 }
 
-template<a_safeint E>
+template<a_moduloint E>
 constexpr E
 operator++(E& l, int) noexcept
 {
@@ -365,13 +361,13 @@ operator++(E& l, int) noexcept
     ++l;
     return result;
 }
-template<a_safeint E>
+template<a_moduloint E>
 constexpr E&
 operator--(E& l) noexcept {
     return l = static_cast<E>(promote_to_unsigned(l) - 1u);
 }
 
-template<a_safeint E>
+template<a_moduloint E>
 constexpr E
 operator--(E& l, int) noexcept {
     auto result=l;
@@ -385,14 +381,14 @@ operator--(E& l, int) noexcept {
 
 
 
-template<a_safeint LEFT, a_safeint RIGHT>
+template<a_moduloint LEFT, a_moduloint RIGHT>
 constexpr auto
 operator+(LEFT l, RIGHT r) noexcept
 requires same_signedness<LEFT,RIGHT>
 {
     // need to handle sign extension
     using result_t=std::conditional_t<sizeof(LEFT)>=sizeof(RIGHT),LEFT,RIGHT>;
-    using ult = detail_::ULT<result_t>;
+    using ult = ULT<result_t>;
     return static_cast<result_t>(
             static_cast<ult>(
                     detail_::promote_and_extend_to_unsigned<ult>(l)
@@ -403,7 +399,7 @@ requires same_signedness<LEFT,RIGHT>
 }
 
 
-template<a_safeint LEFT, a_safeint RIGHT>
+template<a_moduloint LEFT, a_moduloint RIGHT>
 constexpr auto&
 operator+=(LEFT &l, RIGHT r) noexcept
 requires same_signedness<LEFT,RIGHT>
@@ -413,13 +409,13 @@ requires same_signedness<LEFT,RIGHT>
     return l;
 }
 
-template<a_safeint LEFT, a_safeint RIGHT>
+template<a_moduloint LEFT, a_moduloint RIGHT>
 constexpr auto
 operator-(LEFT l, RIGHT r) noexcept
 requires same_signedness<LEFT,RIGHT>
 {
     using result_t=std::conditional_t<sizeof(LEFT)>=sizeof(RIGHT),LEFT,RIGHT>;
-    using ult = detail_::ULT<result_t>;
+    using ult = ULT<result_t>;
 
     return static_cast<result_t>(
             static_cast<ult>(
@@ -429,7 +425,7 @@ requires same_signedness<LEFT,RIGHT>
             )
     );
 }
-template<a_safeint LEFT, a_safeint RIGHT>
+template<a_moduloint LEFT, a_moduloint RIGHT>
 constexpr auto&
 operator-=(LEFT &l, RIGHT r) noexcept
 requires same_signedness<LEFT,RIGHT>
@@ -440,13 +436,13 @@ requires same_signedness<LEFT,RIGHT>
 }
 
 
-template<a_safeint LEFT, a_safeint RIGHT>
+template<a_moduloint LEFT, a_moduloint RIGHT>
 constexpr auto
 operator*(LEFT l, RIGHT r) noexcept
 requires same_signedness<LEFT,RIGHT>
 {
     using result_t=std::conditional_t<sizeof(LEFT)>=sizeof(RIGHT),LEFT,RIGHT>;
-    using ult = detail_::ULT<result_t>;
+    using ult = ULT<result_t>;
     return static_cast<result_t>(
             static_cast<ult>(
                     detail_::promote_and_extend_to_unsigned<ult>(l)
@@ -455,7 +451,7 @@ requires same_signedness<LEFT,RIGHT>
             )
     );
 }
-template<a_safeint LEFT, a_safeint RIGHT>
+template<a_moduloint LEFT, a_moduloint RIGHT>
 constexpr auto&
 operator*=(LEFT &l, RIGHT r) noexcept
 requires same_signedness<LEFT,RIGHT>
@@ -464,13 +460,13 @@ requires same_signedness<LEFT,RIGHT>
     l = static_cast<LEFT>(l*r);
     return l;
 }
-template<a_safeint LEFT, a_safeint RIGHT>
+template<a_moduloint LEFT, a_moduloint RIGHT>
 constexpr auto
 operator/(LEFT l, RIGHT r)
 requires same_signedness<LEFT,RIGHT>
 {
     using result_t=std::conditional_t<sizeof(LEFT)>=sizeof(RIGHT),LEFT,RIGHT>;
-    using ult = detail_::ULT<result_t>;
+    using ult = ULT<result_t>;
 
     ps_assert(r != RIGHT{}, "pssmoin: division by zero");
     if constexpr (std::numeric_limits<result_t>::is_signed){
@@ -496,7 +492,7 @@ requires same_signedness<LEFT,RIGHT>
     }
 
 }
-template<a_safeint LEFT, a_safeint RIGHT>
+template<a_moduloint LEFT, a_moduloint RIGHT>
 constexpr auto&
 operator/=(LEFT &l, RIGHT r)
 requires same_signedness<LEFT,RIGHT>
@@ -505,13 +501,13 @@ requires same_signedness<LEFT,RIGHT>
     l = static_cast<LEFT>(l/r);
     return l;
 }
-template<a_safeint LEFT, a_safeint RIGHT>
+template<a_moduloint LEFT, a_moduloint RIGHT>
 constexpr auto
 operator%(LEFT l, RIGHT r)
-requires same_signedness<LEFT,RIGHT> && std::is_unsigned_v<detail_::ULT<LEFT>>
+requires same_signedness<LEFT,RIGHT> && std::is_unsigned_v<ULT<LEFT>>
 {
     using result_t=std::conditional_t<sizeof(LEFT)>=sizeof(RIGHT),LEFT,RIGHT>;
-    using ult = detail_::ULT<result_t>;
+    using ult = ULT<result_t>;
     ps_assert(r != RIGHT{}, "pssmoin: division by zero");
     return static_cast<result_t>(
             static_cast<ult>(
@@ -521,10 +517,10 @@ requires same_signedness<LEFT,RIGHT> && std::is_unsigned_v<detail_::ULT<LEFT>>
             )
     );
 }
-template<a_safeint LEFT, a_safeint RIGHT>
+template<a_moduloint LEFT, a_moduloint RIGHT>
 constexpr auto&
 operator%=(LEFT &l, RIGHT r)
-requires same_signedness<LEFT,RIGHT> && std::is_unsigned_v<detail_::ULT<LEFT>>
+requires same_signedness<LEFT,RIGHT> && std::is_unsigned_v<ULT<LEFT>>
 {
     static_assert(sizeof(LEFT) >= sizeof(RIGHT),"dividing by too large integer type");
     l = static_cast<LEFT>(l%r);
@@ -533,106 +529,106 @@ requires same_signedness<LEFT,RIGHT> && std::is_unsigned_v<detail_::ULT<LEFT>>
 
 // bitwise operators
 
-template<a_safeint LEFT, a_safeint RIGHT>
+template<a_moduloint LEFT, a_moduloint RIGHT>
 constexpr auto
 operator&(LEFT l, RIGHT r) noexcept
-requires std::is_unsigned_v<detail_::ULT<LEFT>> && std::is_unsigned_v<detail_::ULT<RIGHT>>
+requires std::is_unsigned_v<ULT<LEFT>> && std::is_unsigned_v<ULT<RIGHT>>
 {
     using result_t=std::conditional_t<sizeof(LEFT)>=sizeof(RIGHT),LEFT,RIGHT>;
     return static_cast<result_t>(promote_keep_signedness(l)&promote_keep_signedness(r));
 }
-template<a_safeint LEFT, a_safeint RIGHT>
+template<a_moduloint LEFT, a_moduloint RIGHT>
 constexpr auto&
 operator&=(LEFT &l, RIGHT r) noexcept
-requires std::is_unsigned_v<detail_::ULT<LEFT>> && std::is_unsigned_v<detail_::ULT<RIGHT>>
+requires std::is_unsigned_v<ULT<LEFT>> && std::is_unsigned_v<ULT<RIGHT>>
 {
     static_assert(sizeof(LEFT) == sizeof(RIGHT),"bitand by different sized integer type");
     l = static_cast<LEFT>(l&r);
     return l;
 }
 
-template<a_safeint LEFT, a_safeint RIGHT>
+template<a_moduloint LEFT, a_moduloint RIGHT>
 constexpr auto
 operator|(LEFT l, RIGHT r) noexcept
-requires std::is_unsigned_v<detail_::ULT<LEFT>> && std::is_unsigned_v<detail_::ULT<RIGHT>>
+requires std::is_unsigned_v<ULT<LEFT>> && std::is_unsigned_v<ULT<RIGHT>>
 {
     using result_t=std::conditional_t<sizeof(LEFT)>=sizeof(RIGHT),LEFT,RIGHT>;
     return static_cast<result_t>(promote_keep_signedness(l)|promote_keep_signedness(r));
 }
-template<a_safeint LEFT, a_safeint RIGHT>
+template<a_moduloint LEFT, a_moduloint RIGHT>
 constexpr auto&
 operator|=(LEFT &l, RIGHT r) noexcept
-requires std::is_unsigned_v<detail_::ULT<LEFT>> && std::is_unsigned_v<detail_::ULT<RIGHT>>
+requires std::is_unsigned_v<ULT<LEFT>> && std::is_unsigned_v<ULT<RIGHT>>
 {
     static_assert(sizeof(LEFT) == sizeof(RIGHT),"bitor by different sized integer type");
     l = static_cast<LEFT>(l|r);
     return l;
 }
 
-template<a_safeint LEFT, a_safeint RIGHT>
+template<a_moduloint LEFT, a_moduloint RIGHT>
 constexpr auto
 operator^(LEFT l, RIGHT r) noexcept
-requires std::is_unsigned_v<detail_::ULT<LEFT>> && std::is_unsigned_v<detail_::ULT<RIGHT>>
+requires std::is_unsigned_v<ULT<LEFT>> && std::is_unsigned_v<ULT<RIGHT>>
 {
     using result_t=std::conditional_t<sizeof(LEFT)>=sizeof(RIGHT),LEFT,RIGHT>;
     return static_cast<result_t>(promote_keep_signedness(l)^promote_keep_signedness(r));
 }
-template<a_safeint LEFT, a_safeint RIGHT>
+template<a_moduloint LEFT, a_moduloint RIGHT>
 constexpr auto&
 operator^=(LEFT &l, RIGHT r) noexcept
-requires std::is_unsigned_v<detail_::ULT<LEFT>> && std::is_unsigned_v<detail_::ULT<RIGHT>>
+requires std::is_unsigned_v<ULT<LEFT>> && std::is_unsigned_v<ULT<RIGHT>>
 {
     static_assert(sizeof(LEFT) == sizeof(RIGHT),"xor by different sized integer type");
     l = static_cast<LEFT>(l^r);
     return l;
 }
 
-template<a_safeint LEFT>
+template<a_moduloint LEFT>
 constexpr LEFT
 operator~(LEFT l) noexcept
-requires std::is_unsigned_v<detail_::ULT<LEFT>>
+requires std::is_unsigned_v<ULT<LEFT>>
 {
     return static_cast<LEFT>(~promote_keep_signedness(l));
 }
 
 
-template<a_safeint LEFT, a_safeint RIGHT>
+template<a_moduloint LEFT, a_moduloint RIGHT>
 constexpr LEFT
 operator<<(LEFT l, RIGHT r)
-requires std::is_unsigned_v<detail_::ULT<LEFT>> && std::is_unsigned_v<detail_::ULT<RIGHT>>
+requires std::is_unsigned_v<ULT<LEFT>> && std::is_unsigned_v<ULT<RIGHT>>
 {
     ps_assert(static_cast<size_t>(promote_keep_signedness(r)) < sizeof(LEFT)*CHAR_BIT,
             "pssmoin: trying to shift left by too many bits");
     return static_cast<LEFT>(promote_keep_signedness(l)<<promote_keep_signedness(r));
 }
-template<a_safeint LEFT, a_safeint RIGHT>
+template<a_moduloint LEFT, a_moduloint RIGHT>
 constexpr auto&
 operator<<=(LEFT &l, RIGHT r)
-requires std::is_unsigned_v<detail_::ULT<LEFT>> && std::is_unsigned_v<detail_::ULT<RIGHT>>
+requires std::is_unsigned_v<ULT<LEFT>> && std::is_unsigned_v<ULT<RIGHT>>
 {
     l = (l<<r);
     return l;
 }
-template<a_safeint LEFT, a_safeint RIGHT>
+template<a_moduloint LEFT, a_moduloint RIGHT>
 constexpr LEFT
 operator>>(LEFT l, RIGHT r)
-requires std::is_unsigned_v<detail_::ULT<LEFT>> && std::is_unsigned_v<detail_::ULT<RIGHT>>
+requires std::is_unsigned_v<ULT<LEFT>> && std::is_unsigned_v<ULT<RIGHT>>
 {
     ps_assert(static_cast<size_t>(promote_keep_signedness(r)) < sizeof(LEFT)*CHAR_BIT,
             "pssmoin: trying to shift right by too many bits");
     return static_cast<LEFT>(promote_keep_signedness(l)>>promote_keep_signedness(r));
 }
-template<a_safeint LEFT, a_safeint RIGHT>
+template<a_moduloint LEFT, a_moduloint RIGHT>
 constexpr auto&
 operator>>=(LEFT &l, RIGHT r)
-requires std::is_unsigned_v<detail_::ULT<LEFT>> && std::is_unsigned_v<detail_::ULT<RIGHT>>
+requires std::is_unsigned_v<ULT<LEFT>> && std::is_unsigned_v<ULT<RIGHT>>
 {
     l = (l>>r);
     return l;
 }
 
 
-std::ostream& operator<<(std::ostream &out, a_safeint auto value){
+std::ostream& operator<<(std::ostream &out, a_moduloint auto value){
     out << promote_keep_signedness(value);
     return out;
 }
@@ -641,10 +637,10 @@ std::ostream& operator<<(std::ostream &out, a_safeint auto value){
 // provide std::numeric_limits
 namespace std {
 
-template<pssmoin::a_safeint type>
+template<pssmoin::a_moduloint type>
   struct numeric_limits<type>
   {
-    using ult = pssmoin::detail_::ULT<type>;
+    using ult = pssmoin::ULT<type>;
     static constexpr bool is_specialized = true;
 
     static constexpr type

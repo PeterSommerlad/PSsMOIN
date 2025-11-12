@@ -1,10 +1,9 @@
 #include "TestForThrowingAsserts.h"
 #include "cute.h"
 
-// cannot #define NDEBUG here, because of ODR, must use consistently on all configs
 #include "pssmoin.h"
-    using namespace pssmoin;
-
+using namespace pssmoin;
+//cannot test for raising a signal...
 void DivisionByZeroThrows() {
     constexpr auto divisor = 0_si8;
     auto divident = 1_si8;

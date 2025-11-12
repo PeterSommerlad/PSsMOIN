@@ -11,11 +11,11 @@
 
 
 using namespace pssmoin::literals;
-
+using namespace pssmoin;
 
 void signedIntegerBoundaryTestResultRecovery(){
     // temporary testcase for getting static_asserts above right
-    ASSERT_EQUAL(0x8000'0000_si64, std::numeric_limits<pssmoin::si32>::max() + 1_si64  );
+    ASSERT_EQUAL(0x8000'0000_si64, std::numeric_limits<si32>::max() + 1_si64  );
 }
 
 
@@ -26,7 +26,6 @@ void signedIntegerBoundaryTestResultRecovery(){
 
 
 void ui16intExists() {
-    using pssmoin::ui16;
     auto large=0xff00_ui16;
     //0x10000_ui16; // compile error
     //ui16{0xfffff}; // narrowing detection
@@ -197,7 +196,7 @@ void ui32CanNotbeComparedwithlong(){
 
 //    ASSERTM("check comparison", l != s && s < l && l >= s && !(l < s) && ! (l <= s));
 
-    auto ss = pssmoin::from_int(s);
+    auto ss = from_int(s);
     ASSERTM("check comparison", l != ss && ss < l && l >= ss && !(l < ss) && ! (l <= ss));
 
 }
@@ -250,19 +249,7 @@ void ui8OutputAsInteger(){
 }
 
 void checkedFromInt(){
-    using namespace pssmoin;
-#ifdef NDEBUG
-    ASSERT_EQUAL(0_ui8,from_int_to<ui8>(2400u));
-#else
-  #ifdef PS_ASSERT_THROWS
     ASSERT_THROWS((void)from_int_to<ui8>(2400u), char const *);
-  #else
-    #ifdef PS_TEST_TRAP
-    ASSERTM("cannot test trapping without NDEBUG set, change this to true to check for assert() behavior ",false);
-    ASSERT_EQUAL(0,from_int_to<ui8>(2400u)); // assert()
-    #endif
-  #endif
-#endif
 
 }
 

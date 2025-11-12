@@ -4,11 +4,11 @@ using namespace moins::literals;
 static_assert(0x8000_ui16 == 32768_ui16);
 template<auto ...value>
 using consume_value = void;
+using namespace moins;
 
 namespace _testing {
 
 namespace compile_checks {
-using namespace moins;
 
 
 
@@ -47,8 +47,8 @@ check_expr_does_compile(   ,  ui8 , ( 11_ui8  % 3_ui8) ) // mod
 check_does_compile(not,  ui8 , + 1_si8 + ) // mixed
 check_does_compile(   ,  ui8 , + 255_ui8 + 1_ui8 + ) // wrap
 
-check_does_compile(not, si8, + si8(128) + ) // cannot cast too large value
-check_does_compile(   , si8, + si8(127) + ) // cannot cast too large value
+check_does_compile(not, si8, + from_int_to<si8>(128) + ) // cannot cast too large value
+check_does_compile(   , si8, + from_int_to<si8>(127) + ) // cannot cast too large value
 
 }
 
@@ -58,7 +58,7 @@ from_int_compiles=false;
 
 template<typename FROM>
 constexpr bool
-from_int_compiles<FROM,std::void_t<decltype(moins::from_int(FROM{}))>> = true;
+from_int_compiles<FROM,std::void_t<decltype(from_int(FROM{}))>> = true;
 
 static_assert(from_int_compiles<unsigned char>);
 static_assert(from_int_compiles<signed char>);
@@ -89,7 +89,6 @@ static_assert(! from_int_compiles<wchar_t>);
 static_assert(! from_int_compiles<char16_t>);
 static_assert(! from_int_compiles<char32_t>);
 
-using namespace moins;
 
 static_assert(sizeof(long) == sizeof(long long)); // on my mac...
 static_assert(42_si64 == from_int(42L));
@@ -113,7 +112,6 @@ enum class enum4test{};
 static_assert(!detail_::is_moduloint_v<enum4test>);
 static_assert(!detail_::is_moduloint_v<std::byte>);
 static_assert(!detail_::is_moduloint_v<int>);
-using moins::detail_::promote_keep_signedness;
 static_assert(std::is_same_v<unsigned,decltype(promote_keep_signedness(1_ui8)+1)>);
 static_assert(std::is_same_v<unsigned,decltype(promote_keep_signedness(2_ui16)+1)>);
 static_assert(std::is_same_v<int,decltype(promote_keep_signedness(1_si8))>);
@@ -132,9 +130,6 @@ static_assert(0x7fff'ffff_si32+2_si32 == -0x7fff'ffff_si32);
 //static_assert(0x7fff'ffff + 2); // doesn't compile, integer overflow
 static_assert(-0x7fff'ffff_si32 - 2_si32 == 0x7fff'ffff_si32);
 //static_assert(-0x7fff'ffff - 2); // doesn't compile, integer overflow
-constexpr auto to_underlying(moins::a_moduloint auto v){
-    return v.value_which_should_not_be_referred_to_from_user_code;
-}
 static_assert(std::is_same_v<int,decltype(+to_underlying(42_ui8))>);
 static_assert(std::is_same_v<uint8_t,decltype(to_underlying(42_ui8))>);
 
@@ -487,8 +482,7 @@ static_assert(min_64 / vminus1_8  == min_64 );
 static_assert(min_32 / vminus1_64 == 0x8000'0000_si64 );
 static_assert(min_32 / vminus1_32 == min_32 );
 static_assert(min_32 / vminus1_16 == min_32 );
-static_assert(min_32 / vminus1_8  == min_32 );
-static_assert(min_16 / vminus1_64 == -static_cast<si64>(min_16.value_which_should_not_be_referred_to_from_user_code)  );
+static_assert(min_32 / vminus1_8  == min_32 );static_assert(min_16 / vminus1_64 == -static_cast<si64>(to_underlying(min_16))  );
 static_assert(min_16 / vminus1_32 == 0x8000_si32 );
 static_assert(min_16 / vminus1_16 == min_16 );
 static_assert(min_16 / vminus1_8  == min_16 );
@@ -530,8 +524,6 @@ static_assert(min_8  / v2_64 == -64_si64 );
 static_assert(min_8  / v2_32 == -64_si32 );
 static_assert(min_8  / v2_16 == -64_si16 );
 static_assert(min_8  / v2_8  == -64_si8 );
-
-
 
 
 static_assert(-100_si32 / -9_si64 == 11_si64);

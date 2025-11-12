@@ -4,11 +4,11 @@ using namespace pssmoin::literals;
 static_assert(0x8000_ui16 == 32768_ui16);
 template<auto ...value>
 using consume_value = void;
+using namespace pssmoin;
 
 namespace _testing {
 
 namespace compile_checks {
-using namespace pssmoin;
 
 
 
@@ -47,7 +47,8 @@ check_expr_does_compile(   ,  ui8 , ( 11_ui8  % 3_ui8) ) // mod
 check_does_compile(not,  ui8 , + 1_si8 + ) // mixed
 check_does_compile(   ,  ui8 , + 255_ui8 + 1_ui8 + ) // wrap
 
-
+check_does_compile(not, si8, + from_int_to<si8>(128) + ) // cannot cast too large value
+check_does_compile(   , si8, + from_int_to<si8>(127) + ) // cannot cast too large value
 
 }
 
@@ -57,7 +58,7 @@ from_int_compiles=false;
 
 template<typename FROM>
 constexpr bool
-from_int_compiles<FROM,std::void_t<decltype(pssmoin::from_int(FROM{}))>> = true;
+from_int_compiles<FROM,std::void_t<decltype(from_int(FROM{}))>> = true;
 
 static_assert(from_int_compiles<unsigned char>);
 static_assert(from_int_compiles<signed char>);
@@ -88,7 +89,6 @@ static_assert(! from_int_compiles<wchar_t>);
 static_assert(! from_int_compiles<char16_t>);
 static_assert(! from_int_compiles<char32_t>);
 
-using namespace pssmoin;
 
 static_assert(sizeof(long) == sizeof(long long)); // on my mac...
 static_assert(42_si64 == from_int(42L));
@@ -100,24 +100,24 @@ static_assert(42_ui32 == from_int(42u));
 
 
 
-static_assert(detail_::is_safeint_v<ui8>);
-static_assert(detail_::is_safeint_v<ui16>);
-static_assert(detail_::is_safeint_v<ui32>);
-static_assert(detail_::is_safeint_v<ui64>);
-static_assert(detail_::is_safeint_v<si8>);
-static_assert(detail_::is_safeint_v<si16>);
-static_assert(detail_::is_safeint_v<si32>);
-static_assert(detail_::is_safeint_v<si64>);
+static_assert(detail_::is_moduloint_v<ui8>);
+static_assert(detail_::is_moduloint_v<ui16>);
+static_assert(detail_::is_moduloint_v<ui32>);
+static_assert(detail_::is_moduloint_v<ui64>);
+static_assert(detail_::is_moduloint_v<si8>);
+static_assert(detail_::is_moduloint_v<si16>);
+static_assert(detail_::is_moduloint_v<si32>);
+static_assert(detail_::is_moduloint_v<si64>);
 enum class enum4test{};
-static_assert(!detail_::is_safeint_v<enum4test>);
-static_assert(!detail_::is_safeint_v<std::byte>);
-static_assert(!detail_::is_safeint_v<int>);
+static_assert(!detail_::is_moduloint_v<enum4test>);
+static_assert(!detail_::is_moduloint_v<std::byte>);
+static_assert(!detail_::is_moduloint_v<int>);
 static_assert(std::is_same_v<unsigned,decltype(promote_keep_signedness(1_ui8)+1)>);
 static_assert(std::is_same_v<unsigned,decltype(promote_keep_signedness(2_ui16)+1)>);
 static_assert(std::is_same_v<int,decltype(promote_keep_signedness(1_si8))>);
 static_assert(std::is_same_v<int,decltype(promote_keep_signedness(2_si16))>);
-static_assert(std::is_same_v<uint8_t,std::underlying_type_t<ui8>>);
-static_assert(std::is_same_v<uint16_t,std::underlying_type_t<ui16>>);
+static_assert(std::is_same_v<uint8_t,ULT<ui8>>);
+static_assert(std::is_same_v<uint16_t,ULT<ui16>>);
 
 
 static_assert(promote_keep_signedness(0xffff_ui16 * 0xffff_ui16) == 0x1u); // wraps
@@ -484,7 +484,7 @@ static_assert(min_32 / vminus1_64 == 0x8000'0000_si64 );
 static_assert(min_32 / vminus1_32 == min_32 );
 static_assert(min_32 / vminus1_16 == min_32 );
 static_assert(min_32 / vminus1_8  == min_32 );
-static_assert(min_16 / vminus1_64 == -static_cast<si64>(min_16)  );
+static_assert(min_16 / vminus1_64 == -static_cast<si64>(to_underlying(min_16))  );
 static_assert(min_16 / vminus1_32 == 0x8000_si32 );
 static_assert(min_16 / vminus1_16 == min_16 );
 static_assert(min_16 / vminus1_8  == min_16 );
@@ -562,9 +562,9 @@ template<typename T>
 constexpr bool
 is_integer = is_unsigned<T>||is_signed<T>;
 
-static_assert(is_integer<std::underlying_type_t<ui16>>);
+static_assert(is_integer<ULT<ui16>>);
 static_assert(!is_integer<ui16>);
-static_assert(is_integer<std::underlying_type_t<si16>>);
+static_assert(is_integer<ULT<si16>>);
 static_assert(!is_integer<si16>);
 
 #undef check_does_compile

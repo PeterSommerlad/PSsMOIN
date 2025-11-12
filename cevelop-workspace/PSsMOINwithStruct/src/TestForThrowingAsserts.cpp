@@ -3,7 +3,7 @@
 
 #include "moins.h"
 using namespace moins;
-
+//cannot test for raising a signal...
 void DivisionByZeroThrows() {
     constexpr auto divisor = 0_si8;
     auto divident = 1_si8;
