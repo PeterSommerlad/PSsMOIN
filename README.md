@@ -9,7 +9,7 @@ This is a new version of this funcitonality (simpe modulo arithmetic integers) w
 
 The error handling is still somehow configurable but with fewer knobs. You either get an exception throwing a `char const *` with an error message or one can opt for getting a signal `SIGFPE` for invalid operations in addition.
 
-
+Play with it on [compiler explorer](https://godbolt.org/z/K3WPPrcoE).
 
 It completes the three approaches for adding safer integer arithmetic:
 
