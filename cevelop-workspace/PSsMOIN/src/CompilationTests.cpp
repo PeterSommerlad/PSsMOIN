@@ -137,7 +137,12 @@ static_assert(std::is_same_v<uint8_t,decltype(to_underlying(42_ui8))>);
 // doesn't work directly, because concept check in constrained template from_int causes hard failure
 namespace _testing {
 namespace compile_checks {
+#ifdef __cpp_concepts
 constexpr auto from_int(auto b){return b;} // provide overload to make concept check not be a hard error
+#else
+template<typename T>
+constexpr auto from_int(T b){return b;} // provide overload to make concept check not be a hard error
+#endif
 check_expr_does_compile(not , ui8,(T(32) == from_int(' ')) ) // expression must depend on template parameter T
 check_expr_does_compile(not , ui8,(T(32) == from_int(u' ')) ) // expression must depend on template parameter T
 check_expr_does_compile(not , ui8,(T(32) == from_int(U' ')) ) // expression must depend on template parameter T
@@ -538,7 +543,7 @@ static_assert(std::numeric_limits<si32>::min() / -1_si32 == std::numeric_limits<
 
 template<typename T, typename WHAT>
 constexpr bool
-isa = std::is_same_v<std::remove_cvref_t<T>,WHAT>;
+isa = std::is_same_v<std::remove_cv_t<std::remove_reference_t<T>>,WHAT>;
 
 
 template<typename T>
