@@ -14,7 +14,8 @@ namespace compile_checks {
 
 #define concat_line_impl(A, B) A##_##B
 #define concat_line(A, B) concat_line_impl(A,B)
-
+#if __cplusplus >= 202002L
+// pre C++20 cannot have struct values as template arguments
 #define check_expr_does_compile(NOT, FROM, expr) \
 namespace concat_line(NOT##_test, __LINE__) { \
         template<typename T, typename=void>\
@@ -27,7 +28,10 @@ static_assert(NOT expression_compiles<FROM>, "should " #NOT " compile: " #expr )
 } // namespace tag
 
 #define check_does_compile(NOT, FROM, OPER) check_expr_does_compile(NOT, FROM, (T{} OPER T{}))
-
+#else
+#define check_does_compile(NOT, FROM, OPER)
+#define check_expr_does_compile(NOT, FROM, expr)
+#endif
 
 // need to be on separate lines for disambiguation
 check_does_compile(not,  si8 , <<  )
@@ -136,7 +140,12 @@ static_assert(std::is_same_v<uint8_t,decltype(to_underlying(42_ui8))>);
 // doesn't work directly, because concept check in constrained template from_int causes hard failure
 namespace _testing {
 namespace compile_checks {
+#ifdef __cpp_concepts
 constexpr auto from_int(auto b){return b;} // provide overload to make concept check not be a hard error
+#else
+template<typename T>
+constexpr auto from_int(T b){return b;} // provide overload to make concept check not be a hard error
+#endif
 check_expr_does_compile(not , ui8,(T(32) == from_int(' ')) ) // expression must depend on template parameter T
 check_expr_does_compile(not , ui8,(T(32) == from_int(u' ')) ) // expression must depend on template parameter T
 check_expr_does_compile(not , ui8,(T(32) == from_int(U' ')) ) // expression must depend on template parameter T
@@ -536,7 +545,7 @@ static_assert(std::numeric_limits<si32>::min() / -1_si32 == std::numeric_limits<
 
 template<typename T, typename WHAT>
 constexpr bool
-isa = std::is_same_v<std::remove_cvref_t<T>,WHAT>;
+isa = std::is_same_v<std::remove_cv_t<std::remove_reference_t<T>>,WHAT>;
 
 
 template<typename T>

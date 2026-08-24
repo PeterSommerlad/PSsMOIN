@@ -130,7 +130,7 @@ si64 operator""_si64(unsigned long long val) {
     }
 }
 }
-
+#undef CONSTEVAL
 
 namespace detail_ {
 

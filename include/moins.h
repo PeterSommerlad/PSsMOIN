@@ -33,8 +33,13 @@
 
 namespace moins { // SATuration Integral Numbers with struct
 namespace detail_ {
+#if __cplusplus >= 202002L
 template<typename T>
 using plain = std::remove_cvref_t<T>;
+#else
+template<typename T>
+using plain = std::remove_cv_t<std::remove_reference_t<T>>;
+#endif
 
 template<typename CHAR>
 constexpr bool
@@ -67,26 +72,29 @@ is_known_integer_v =    is_compatible_integer_v<std::uint8_t,  TESTED>
                      || is_compatible_integer_v<std::int32_t, TESTED>
                      || is_compatible_integer_v<std::int64_t, TESTED>;
 }
+// deliberately not std::integral, because of bool and characters!
+#ifdef __cpp_concepts
 template<typename TESTED>
 concept sized_integer = detail_::is_known_integer_v<TESTED>;
-// deliberately not std::integral, because of bool and characters!
-namespace detail_ {
+#endif
 
 
-
-
-
-} // NS detail_
-
-
+#ifdef __cpp_concepts
 template<sized_integer INT>
+#else
+template<typename INT, typename=std::enable_if_t<detail_::is_known_integer_v<INT>,void>>
+#endif
 struct [[nodiscard]] Moin;
 
 namespace detail_{
-template<typename T>
+template<typename T, typename=void>
 constexpr bool is_moduloint_v = false;
-template<sized_integer I>
-constexpr bool is_moduloint_v<Moin<I>> = true;
+#ifdef __cpp_concepts
+template<sized_integer INT>
+#else
+template<typename INT, typename VOID=std::enable_if_t<detail_::is_known_integer_v<INT>,void>>
+#endif
+constexpr bool is_moduloint_v<Moin<INT,VOID>> = true;
 
 template<typename C>
 struct ULT_impl;
@@ -95,11 +103,13 @@ struct ULT_impl<Moin<I>>{
     using type=I;
 };
 } // NS detail_
+#ifdef __cpp_concept
 template<typename E>
 concept a_moduloint = detail_::is_moduloint_v<E>;
+#endif
 
 template<typename C>
-using ULT=detail_::ULT_impl<detail_::plain<C>>::type;
+using ULT=typename detail_::ULT_impl<detail_::plain<C>>::type;
 
 
 template<typename E>
@@ -109,8 +119,11 @@ using promoted_t = // will promote the underlying type keeping signedness
                 , unsigned
                 , int >
             , ULT<E>>;
-
+#ifdef __cpp_concept
 template<a_moduloint E>
+#else
+template<typename E, typename=std::enable_if_t<detail_::is_moduloint_v<E>,void>>
+#endif
 [[nodiscard]]
 constexpr auto
 promote_keep_signedness(E value) noexcept
@@ -120,7 +133,11 @@ promote_keep_signedness(E value) noexcept
 namespace detail_ {
 
 
+#ifdef __cpp_concept
 template<a_moduloint E>
+#else
+template<typename E, typename=std::enable_if_t<detail_::is_moduloint_v<E>,void>>
+#endif
 [[nodiscard]]
 constexpr auto
 promote_to_unsigned(E value) noexcept
@@ -128,7 +145,11 @@ promote_to_unsigned(E value) noexcept
     using u_result_t = std::make_unsigned_t<promoted_t<E>>;
     return static_cast<u_result_t>(promote_keep_signedness(value));
 }
+#ifdef __cpp_concept
 template<sized_integer TARGET, a_moduloint E>
+#else
+template<typename TARGET, typename E, typename=std::enable_if_t<detail_::is_known_integer_v<TARGET>&&detail_::is_moduloint_v<E> ,void>>
+#endif
 [[nodiscard]]
 constexpr auto
 promote_and_extend_to_unsigned(E value) noexcept
@@ -139,11 +160,17 @@ promote_and_extend_to_unsigned(E value) noexcept
        return static_cast<u_result_t>(static_cast<s_result_t>(promote_keep_signedness(value)));// promote with sign extension
 }
 
+#ifdef __cpp_concept
 template<sized_integer TARGET, a_moduloint E>
+#else
+template<typename TARGET, typename E, typename=std::enable_if_t<detail_::is_known_integer_v<TARGET>&&std::numeric_limits<TARGET>::is_signed&&detail_::is_moduloint_v<E> ,void>>
+#endif
 [[nodiscard]]
 constexpr auto
 abs_promoted_and_extended_as_unsigned(E val) noexcept
- requires (std::numeric_limits<TARGET>::is_signed)
+#ifdef __cpp_concept
+requires (std::numeric_limits<TARGET>::is_signed)
+#endif
 { // promote to unsigned for wrap around arithmetic removing sign if negative
   // return just the bits for std::numeric_limits<TARGET>::min()
        using promoted_t = promoted_t<E>;
@@ -165,14 +192,20 @@ template<typename LEFT, typename RIGHT>
 constexpr bool
 same_signedness_v = std::numeric_limits<LEFT>::is_signed == std::numeric_limits<RIGHT>::is_signed;
 
+#ifdef __cpp_concepts
 template<typename LEFT, typename RIGHT>
 concept same_signedness = same_signedness_v<LEFT,RIGHT>;
+#endif
 
 // the following are not really needed for class types,
 // because of the availability of constructors, kept for symmetry
 
 // path tests are compile-time checked:
+#ifdef __cpp_concepts
 template<a_moduloint TO, sized_integer FROM>
+#else
+template<typename TO, typename FROM, typename=std::enable_if_t<detail_::is_moduloint_v<TO> && detail_::is_known_integer_v<FROM>, void>>
+#endif
 [[nodiscard]]
 constexpr auto
 from_int_to(FROM val)
@@ -194,30 +227,73 @@ from_int_to(FROM val)
     return static_cast<result_t>(static_cast<ultr>(val)); // cast is checked above
 }
 
+#ifdef __cpp_concepts
 constexpr auto to_underlying(moins::a_moduloint auto v){
+#else
+template<typename T, typename=std::enable_if_t<moins::detail_::is_moduloint_v<T>,void>>
+constexpr auto to_underlying(T v){
+#endif
     return v.value_which_should_not_be_referred_to_from_user_code;
 }
 
+#ifdef __cpp_concepts
 template<sized_integer INT>
+#else
+template<typename INT, typename>
+#endif
 struct [[nodiscard]] Moin{
     constexpr Moin() noexcept:value_which_should_not_be_referred_to_from_user_code{}{}
+#if __cplusplus >= 202002L
     explicit constexpr Moin(std::same_as<INT> auto v) noexcept:value_which_should_not_be_referred_to_from_user_code(v){
     }
     friend constexpr auto operator<=>(Moin, Moin) noexcept = default;
-    explicit constexpr operator INT() const noexcept { return value_which_should_not_be_referred_to_from_user_code;}
     template<std::integral FROM>
     explicit constexpr Moin(FROM v)
     requires (not std::same_as<INT,detail_::plain<FROM>>)
     :value_which_should_not_be_referred_to_from_user_code{from_int_to<Moin>(v)}{
     }
+#else
+    template<typename T, typename=std::enable_if_t<std::is_integral_v<T> && not std::is_same_v<T,INT>,void>>
+    explicit constexpr Moin(T v) noexcept
+    :value_which_should_not_be_referred_to_from_user_code{from_int_to<Moin>(v)}{}
+    explicit constexpr Moin(INT v) noexcept
+    :value_which_should_not_be_referred_to_from_user_code{v}{}
+   friend constexpr bool operator<(Moin left, Moin right) {
+        return left.value_which_should_not_be_referred_to_from_user_code < right.value_which_should_not_be_referred_to_from_user_code;
+    }
+    friend constexpr bool operator>=(Moin left, Moin right) {
+        return not (left < right);
+    }
+    friend constexpr bool operator>(Moin left, Moin right) {
+        return right < left;
+    }
+    friend constexpr bool operator<=(Moin left, Moin right) {
+        return not (left > right);
+    }
+    friend constexpr bool operator==(Moin left, Moin right) {
+        return left.value_which_should_not_be_referred_to_from_user_code == right.value_which_should_not_be_referred_to_from_user_code;
+    }
+    friend constexpr bool operator!=(Moin left, Moin right) {
+        return not (left==right);
+    }
+#endif
 
     // member/friend operators
+    explicit constexpr operator INT() const noexcept { return value_which_should_not_be_referred_to_from_user_code;}
 
     // negation for signed types only, two's complement
-    constexpr auto
+    template <typename T=INT>
+    constexpr
+    auto
     operator-() const
+#ifdef __cpp_concepts
     requires std::numeric_limits<INT>::is_signed
+#else
+    -> std::enable_if_t<std::numeric_limits<T>::is_signed,Moin>
+#endif
     {
+        //static_assert(std::numeric_limits<INT>::is_signed, "negation only available for signed types");
+
         return static_cast<Moin>(static_cast<INT>(1u + ~detail_::promote_to_unsigned(*this)));
     }
 
@@ -248,10 +324,16 @@ struct [[nodiscard]] Moin{
 
     // arithmetic
 
+#ifdef __cpp_concepts
     template<a_moduloint RIGHT>
+#else
+    template<typename RIGHT, typename=std::enable_if_t<detail_::is_moduloint_v<RIGHT> && same_signedness_v<Moin,RIGHT>,void>>
+#endif
     friend constexpr auto
     operator+(Moin l, RIGHT r)
+#ifdef __cpp_concepts
     requires same_signedness<Moin,RIGHT>
+#endif
     {
         // handle sign extension
         using result_t=std::conditional_t<sizeof(Moin)>=sizeof(RIGHT),Moin,RIGHT>;
@@ -266,20 +348,32 @@ struct [[nodiscard]] Moin{
     }
 
 
+#ifdef __cpp_concepts
     template<a_moduloint RIGHT>
+#else
+    template<typename RIGHT, typename=std::enable_if_t<detail_::is_moduloint_v<RIGHT> && same_signedness_v<Moin,RIGHT>,void>>
+#endif
     constexpr auto&
     operator+=(RIGHT r)  &
+#ifdef __cpp_concepts
     requires same_signedness<Moin,RIGHT>
+#endif
     {
         static_assert(sizeof(Moin) >= sizeof(RIGHT),"moins: adding too large integer type");
         *this = static_cast<Moin>(*this+r);
         return *this;
     }
 
+#ifdef __cpp_concepts
     template<a_moduloint RIGHT>
+#else
+    template<typename RIGHT, typename=std::enable_if_t<detail_::is_moduloint_v<RIGHT> && same_signedness_v<Moin,RIGHT>,void>>
+#endif
     friend constexpr auto
     operator-(Moin l, RIGHT r)
+#ifdef __cpp_concepts
     requires same_signedness<Moin,RIGHT>
+#endif
     {
         using result_t=std::conditional_t<sizeof(Moin)>=sizeof(RIGHT),Moin,RIGHT>;
         using ult = ULT<result_t>;
@@ -292,10 +386,16 @@ struct [[nodiscard]] Moin{
                 )
         );
     }
+#ifdef __cpp_concepts
     template<a_moduloint RIGHT>
+#else
+    template<typename RIGHT, typename=std::enable_if_t<detail_::is_moduloint_v<RIGHT> && same_signedness_v<Moin,RIGHT>,void>>
+#endif
     constexpr auto&
     operator-=(RIGHT r) &
+#ifdef __cpp_concepts
     requires same_signedness<Moin,RIGHT>
+#endif
     {
         static_assert(sizeof(Moin) >= sizeof(RIGHT),"subtracting too large integer type");
         *this = static_cast<Moin>(*this-r);
@@ -303,10 +403,16 @@ struct [[nodiscard]] Moin{
     }
 
 
+#ifdef __cpp_concepts
     template<a_moduloint RIGHT>
+#else
+    template<typename RIGHT, typename=std::enable_if_t<detail_::is_moduloint_v<RIGHT> && same_signedness_v<Moin,RIGHT>,void>>
+#endif
     friend constexpr auto
     operator*(Moin l, RIGHT r)
+#ifdef __cpp_concepts
     requires same_signedness<Moin,RIGHT>
+#endif
     {
         using result_t=std::conditional_t<sizeof(Moin)>=sizeof(RIGHT),Moin,RIGHT>;
         using ult = ULT<result_t>;
@@ -319,19 +425,31 @@ struct [[nodiscard]] Moin{
                 )
         );
     }
+#ifdef __cpp_concepts
     template<a_moduloint RIGHT>
+#else
+    template<typename RIGHT, typename=std::enable_if_t<detail_::is_moduloint_v<RIGHT> && same_signedness_v<Moin,RIGHT>,void>>
+#endif
     constexpr auto&
     operator*=(RIGHT r) &
+#ifdef __cpp_concepts
     requires same_signedness<Moin,RIGHT>
+#endif
     {
         static_assert(sizeof(Moin) >= sizeof(RIGHT),"multiplying too large integer type");
         *this = static_cast<Moin>(*this*r);
         return *this;
     }
+#ifdef __cpp_concepts
     template<a_moduloint RIGHT>
+#else
+    template<typename RIGHT, typename=std::enable_if_t<detail_::is_moduloint_v<RIGHT> && same_signedness_v<Moin,RIGHT>,void>>
+#endif
     friend constexpr auto
     operator/(Moin const l, RIGHT const r)
+#ifdef __cpp_concepts
     requires same_signedness<Moin,RIGHT>
+#endif
     {
         using result_t=std::conditional_t<sizeof(Moin)>=sizeof(RIGHT),Moin,RIGHT>;
         using ult = ULT<result_t>;
@@ -358,19 +476,31 @@ struct [[nodiscard]] Moin{
         );
         }
     }
+#ifdef __cpp_concepts
     template<a_moduloint RIGHT>
+#else
+    template<typename RIGHT, typename=std::enable_if_t<detail_::is_moduloint_v<RIGHT> && same_signedness_v<Moin,RIGHT>,void>>
+#endif
     constexpr auto&
     operator/=(RIGHT r) &
+#ifdef __cpp_concepts
     requires same_signedness<Moin,RIGHT>
+#endif
     {
         static_assert(sizeof(Moin) >= sizeof(RIGHT),"dividing by too large integer type");
         *this = static_cast<Moin>(*this/r);
         return *this;
     }
+#ifdef __cpp_concepts
     template<a_moduloint RIGHT>
+#else
+    template<typename RIGHT, typename=std::enable_if_t<detail_::is_moduloint_v<RIGHT> && std::is_unsigned_v<ULT<Moin>> && std::is_unsigned_v<ULT<RIGHT>>,void>>
+#endif
     friend constexpr auto
     operator%(Moin l, RIGHT r)
+#ifdef __cpp_concepts
     requires std::is_unsigned_v<ULT<Moin>> && std::is_unsigned_v<ULT<RIGHT>>
+#endif
     {
         using result_t=std::conditional_t<sizeof(Moin)>=sizeof(RIGHT),Moin,RIGHT>;
         using ult = ULT<result_t>;
@@ -383,10 +513,16 @@ struct [[nodiscard]] Moin{
                 )
         );
     }
+#ifdef __cpp_concepts
     template<a_moduloint RIGHT>
+#else
+    template<typename RIGHT, typename=std::enable_if_t<detail_::is_moduloint_v<RIGHT> && std::is_unsigned_v<ULT<Moin>> && std::is_unsigned_v<ULT<RIGHT>>,void>>
+#endif
     constexpr auto&
     operator%=(RIGHT r) &
+#ifdef __cpp_concepts
     requires std::is_unsigned_v<ULT<Moin>> && std::is_unsigned_v<ULT<RIGHT>>
+#endif
     {
         static_assert(sizeof(Moin) >= sizeof(RIGHT),"dividing by too large integer type");
         *this = static_cast<Moin>(*this % r);
@@ -394,97 +530,162 @@ struct [[nodiscard]] Moin{
     }
     // bitwise operators
 
+#ifdef __cpp_concepts
     template<a_moduloint RIGHT>
+#else
+    template<typename RIGHT, typename=std::enable_if_t<detail_::is_moduloint_v<RIGHT> && std::is_unsigned_v<ULT<Moin>> && std::is_unsigned_v<ULT<RIGHT>>,void>>
+#endif
     friend constexpr auto
     operator&(Moin l, RIGHT r) noexcept
+#ifdef __cpp_concepts
     requires std::is_unsigned_v<ULT<Moin>> && std::is_unsigned_v<ULT<RIGHT>>
+#endif
     {
         using result_t=std::conditional_t<sizeof(Moin)>=sizeof(RIGHT),Moin,RIGHT>;
         return static_cast<result_t>(promote_keep_signedness(l)&promote_keep_signedness(r));
     }
+#ifdef __cpp_concepts
     template<a_moduloint RIGHT>
+#else
+    template<typename RIGHT, typename=std::enable_if_t<detail_::is_moduloint_v<RIGHT> && std::is_unsigned_v<ULT<Moin>> && std::is_unsigned_v<ULT<RIGHT>>,void>>
+#endif
     constexpr auto&
     operator&=(RIGHT r) & noexcept
+#ifdef __cpp_concepts
     requires std::is_unsigned_v<ULT<Moin>> && std::is_unsigned_v<ULT<RIGHT>>
+#endif
     {
         static_assert(sizeof(Moin) == sizeof(RIGHT),"bitand by different sized integer type");
         *this = static_cast<Moin>(*this&r);
         return *this;
     }
 
+#ifdef __cpp_concepts
     template<a_moduloint RIGHT>
+#else
+    template<typename RIGHT, typename=std::enable_if_t<detail_::is_moduloint_v<RIGHT> && std::is_unsigned_v<ULT<Moin>> && std::is_unsigned_v<ULT<RIGHT>>,void>>
+#endif
     friend constexpr auto
     operator|(Moin l, RIGHT r) noexcept
+#ifdef __cpp_concepts
     requires std::is_unsigned_v<ULT<Moin>> && std::is_unsigned_v<ULT<RIGHT>>
+#endif
     {
         using result_t=std::conditional_t<sizeof(Moin)>=sizeof(RIGHT),Moin,RIGHT>;
         return static_cast<result_t>(promote_keep_signedness(l)|promote_keep_signedness(r));
     }
+#ifdef __cpp_concepts
     template<a_moduloint RIGHT>
+#else
+    template<typename RIGHT, typename=std::enable_if_t<detail_::is_moduloint_v<RIGHT> && std::is_unsigned_v<ULT<Moin>> && std::is_unsigned_v<ULT<RIGHT>>,void>>
+#endif
     constexpr auto&
     operator|=(RIGHT r) & noexcept
+#ifdef __cpp_concepts
     requires std::is_unsigned_v<ULT<Moin>> && std::is_unsigned_v<ULT<RIGHT>>
+#endif
     {
         static_assert(sizeof(Moin) == sizeof(RIGHT),"bitor by different sized integer type");
         *this = static_cast<Moin>(*this|r);
         return *this;
     }
 
+#ifdef __cpp_concepts
     template<a_moduloint RIGHT>
+#else
+    template<typename RIGHT, typename=std::enable_if_t<detail_::is_moduloint_v<RIGHT> && std::is_unsigned_v<ULT<Moin>> && std::is_unsigned_v<ULT<RIGHT>>,void>>
+#endif
     friend constexpr auto
     operator^(Moin l, RIGHT r) noexcept
+#ifdef __cpp_concepts
     requires std::is_unsigned_v<ULT<Moin>> && std::is_unsigned_v<ULT<RIGHT>>
+#endif
     {
         using result_t=std::conditional_t<sizeof(Moin)>=sizeof(RIGHT),Moin,RIGHT>;
         return static_cast<result_t>(promote_keep_signedness(l)^promote_keep_signedness(r));
     }
+#ifdef __cpp_concepts
     template<a_moduloint RIGHT>
+#else
+    template<typename RIGHT, typename=std::enable_if_t<detail_::is_moduloint_v<RIGHT> && std::is_unsigned_v<ULT<Moin>> && std::is_unsigned_v<ULT<RIGHT>>,void>>
+#endif
     constexpr auto&
     operator^=(RIGHT r) & noexcept
+#ifdef __cpp_concepts
     requires std::is_unsigned_v<ULT<Moin>> && std::is_unsigned_v<ULT<RIGHT>>
+#endif
     {
         static_assert(sizeof(Moin) == sizeof(RIGHT),"xor by different sized integer type");
         *this = static_cast<Moin>(*this^r);
         return *this;
     }
 
-
-    constexpr Moin
+    template<typename ult=ULT<Moin>>
+    constexpr
+    auto
     operator~() noexcept
+#ifdef __cpp_concepts
     requires std::is_unsigned_v<ULT<Moin>>
+#else
+    ->std::enable_if_t<std::is_unsigned_v<ult>,Moin>
+#endif
     {
         return Moin(static_cast<INT>(~ promote_keep_signedness(*this)));
     }
 
 
+#ifdef __cpp_concepts
     template<a_moduloint RIGHT>
+#else
+    template<typename RIGHT, typename=std::enable_if_t<detail_::is_moduloint_v<RIGHT> && std::is_unsigned_v<ULT<Moin>> && std::is_unsigned_v<ULT<RIGHT>>,void>>
+#endif
     friend constexpr Moin
     operator<<(Moin l, RIGHT r)
+#ifdef __cpp_concepts
     requires std::is_unsigned_v<ULT<Moin>> && std::is_unsigned_v<ULT<RIGHT>>
+#endif
     {
         ps_assert( static_cast<size_t>(promote_keep_signedness(r)) < sizeof(Moin)*CHAR_BIT , "moins: trying to left-shift by too many bits");
         return static_cast<Moin>(promote_keep_signedness(l)<<promote_keep_signedness(r));
     }
+#ifdef __cpp_concepts
     template<a_moduloint RIGHT>
+#else
+    template<typename RIGHT, typename=std::enable_if_t<detail_::is_moduloint_v<RIGHT> && std::is_unsigned_v<ULT<Moin>> && std::is_unsigned_v<ULT<RIGHT>>,void>>
+#endif
     constexpr auto&
     operator<<=(RIGHT r) &
+#ifdef __cpp_concepts
     requires std::is_unsigned_v<ULT<Moin>> && std::is_unsigned_v<ULT<RIGHT>>
+#endif
     {
         *this = (*this<<r);
         return *this;
     }
+#ifdef __cpp_concepts
     template<a_moduloint RIGHT>
+#else
+    template<typename RIGHT, typename=std::enable_if_t<detail_::is_moduloint_v<RIGHT> && std::is_unsigned_v<ULT<Moin>> && std::is_unsigned_v<ULT<RIGHT>>,void>>
+#endif
     friend constexpr Moin
     operator>>(Moin l, RIGHT r)
+#ifdef __cpp_concepts
     requires std::is_unsigned_v<ULT<Moin>> && std::is_unsigned_v<ULT<RIGHT>>
+#endif
     {
         ps_assert( static_cast<size_t>(promote_keep_signedness(r)) < sizeof(Moin)*CHAR_BIT , "moins: trying to right-shift by too many bits");
         return static_cast<Moin>(promote_keep_signedness(l)>>promote_keep_signedness(r));
     }
+#ifdef __cpp_concepts
     template<a_moduloint RIGHT>
+#else
+    template<typename RIGHT, typename=std::enable_if_t<detail_::is_moduloint_v<RIGHT> && std::is_unsigned_v<ULT<Moin>> && std::is_unsigned_v<ULT<RIGHT>>,void>>
+#endif
     constexpr auto&
     operator>>=( RIGHT r) &
+#ifdef __cpp_concepts
     requires std::is_unsigned_v<ULT<Moin>> && std::is_unsigned_v<ULT<RIGHT>>
+#endif
     {
         *this = (*this >>r);
         return *this;
@@ -506,8 +707,17 @@ using ui16 = Moin<std::uint16_t>;
 using ui32 = Moin<std::uint32_t>;
 using ui64 = Moin<std::uint64_t>;
 
+#if __cplusplus == 201703L
+#define CONSTEVAL constexpr
+#elif __cplusplus >= 202002L
+#define CONSTEVAL consteval
+#else
+#error "requires at least C++17, best C++20"
+#endif
+
+
 inline namespace literals {
-consteval
+CONSTEVAL
 auto operator""_ui8(unsigned long long value) {
     if (value <= std::numeric_limits<std::uint8_t>::max()) {
         return ui8(static_cast<std::uint8_t>(value));
@@ -517,7 +727,7 @@ auto operator""_ui8(unsigned long long value) {
 }
 
 
-consteval
+CONSTEVAL
 auto operator""_ui16(unsigned long long value) {
     if (value <= std::numeric_limits<std::uint16_t>::max()) {
         return ui16(static_cast<std::uint16_t>(value));
@@ -527,7 +737,7 @@ auto operator""_ui16(unsigned long long value) {
 }
 
 
-consteval
+CONSTEVAL
 auto operator""_ui32(unsigned long long value) {
     if (value <= std::numeric_limits<uint32_t>::max()) {
         return ui32(static_cast<std::uint32_t>(value));
@@ -537,7 +747,7 @@ auto operator""_ui32(unsigned long long value) {
 }
 
 
-consteval
+CONSTEVAL
 auto operator""_ui64(unsigned long long value) {
     if constexpr (sizeof(ui64) < sizeof(value)){
         if (value > 0xffff'ffff'fffffffful) {
@@ -557,7 +767,7 @@ using si64 = Moin<std::int64_t>;
 
 
 inline namespace literals {
-consteval
+CONSTEVAL
 auto operator""_si8(unsigned long long value) {
     if (value <= std::numeric_limits<std::int8_t>::max()) {
         return si8(static_cast<int8_t>(value));
@@ -567,7 +777,7 @@ auto operator""_si8(unsigned long long value) {
 }
 
 
-consteval
+CONSTEVAL
 auto operator""_si16(unsigned long long value) {
     if (value <= std::numeric_limits<int16_t>::max()) {
         return si16(static_cast<int16_t>(value));
@@ -577,7 +787,7 @@ auto operator""_si16(unsigned long long value) {
 }
 
 
-consteval
+CONSTEVAL
 auto operator""_si32(unsigned long long value) {
     if (value <= std::numeric_limits<int32_t>::max()) {
         return si32(static_cast<int32_t>(value));
@@ -587,7 +797,7 @@ auto operator""_si32(unsigned long long value) {
 }
 
 
-consteval
+CONSTEVAL
 auto operator""_si64(unsigned long long value) {
     if (value <= std::numeric_limits<int64_t>::max()) {
         return si64(static_cast<int64_t>(value));
@@ -595,8 +805,13 @@ auto operator""_si64(unsigned long long value) {
         throw "integral constant too large"; // trigger compile-time error
     }
 }
+#undef CONSTEVAL
 } // NS literals
+#ifdef __cpp_concepts
 template<sized_integer T>
+#else
+template<typename T, typename=std::enable_if_t<detail_::is_known_integer_v<T>,void>>
+#endif
 [[nodiscard]]
 constexpr auto
 from_int(T value) noexcept {
@@ -614,6 +829,76 @@ from_int(T value) noexcept {
                    conditional_t<is_compatible_integer_v<std::int64_t,T>, si64, cannot_convert_integer>>>>>>>>;
     return static_cast<result_t>(value); // no need to check, result_t corresponds to input T's range
 }
+#ifndef __cpp_concepts
+namespace detail_{
+template<typename type, typename=std::enable_if_t<moins::detail_::is_moduloint_v<type>,void> >
+  struct numeric_limits
+  {
+    using ult = moins::ULT<type>;
+    static constexpr bool is_specialized = true;
+
+    static constexpr type
+    min() noexcept { return type{std::numeric_limits<ult>::min()}; }
+
+    static constexpr type
+    max() noexcept { return type{std::numeric_limits<ult>::max()}; }
+
+    static constexpr type
+    lowest() noexcept { return type{std::numeric_limits<ult>::lowest()}; }
+
+    static constexpr int digits = std::numeric_limits<ult>::digits;
+    static constexpr int digits10 = std::numeric_limits<ult>::digits10;
+    static constexpr int max_digits10 = std::numeric_limits<ult>::max_digits10;
+    static constexpr bool is_signed = std::numeric_limits<ult>::is_signed;
+    static constexpr bool is_integer = std::numeric_limits<ult>::is_integer;
+    static constexpr bool is_exact = std::numeric_limits<ult>::is_exact;
+    static constexpr int radix = std::numeric_limits<ult>::radix;
+
+    static constexpr type
+    epsilon() noexcept {  return type{std::numeric_limits<ult>::epsilon()}; }
+
+    static constexpr type
+    round_error() noexcept {  return type{std::numeric_limits<ult>::round_error()}; }
+
+    static constexpr int min_exponent = std::numeric_limits<ult>::min_exponent;
+    static constexpr int min_exponent10 = std::numeric_limits<ult>::min_exponent10;
+    static constexpr int max_exponent = std::numeric_limits<ult>::max_exponent;
+    static constexpr int max_exponent10 = std::numeric_limits<ult>::max_exponent10;
+
+    static constexpr bool has_infinity = std::numeric_limits<ult>::has_infinity;
+    static constexpr bool has_quiet_NaN = std::numeric_limits<ult>::has_quiet_NaN;
+    static constexpr bool has_signaling_NaN = std::numeric_limits<ult>::has_signaling_NaN;
+    static constexpr std::float_denorm_style has_denorm
+     = std::numeric_limits<ult>::has_denorm;
+    static constexpr bool has_denorm_loss = std::numeric_limits<ult>::has_denorm_loss;
+
+    static constexpr type
+    infinity() noexcept { return type{std::numeric_limits<ult>::infinity()}; }
+
+    static constexpr type
+    quiet_NaN() noexcept { return type{std::numeric_limits<ult>::quiet_NaN()}; }
+
+    static constexpr type
+    signaling_NaN() noexcept
+    { return type{std::numeric_limits<ult>::signaling_NaN()}; }
+
+    static constexpr type
+    denorm_min() noexcept
+    { return type{std::numeric_limits<ult>::denorm_min()}; }
+
+
+    static constexpr bool is_iec559 =  std::numeric_limits<ult>::is_iec559;
+    static constexpr bool is_bounded =  std::numeric_limits<ult>::is_bounded;
+    static constexpr bool is_modulo =  true;
+
+    static constexpr bool traps = false;
+    static constexpr bool tinyness_before =  std::numeric_limits<ult>::tinyness_before;
+    static constexpr std::float_round_style round_style =  std::numeric_limits<ult>::round_style;
+  };
+
+
+}
+#endif
 
 
 } // NS moins
@@ -622,6 +907,7 @@ from_int(T value) noexcept {
 // provide std::numeric_limits
 namespace std {
 
+#ifdef __cpp_concepts
 template<moins::a_moduloint type>
   struct numeric_limits<type>
   {
@@ -684,7 +970,25 @@ template<moins::a_moduloint type>
     static constexpr bool tinyness_before =  numeric_limits<ult>::tinyness_before;
     static constexpr float_round_style round_style =  numeric_limits<ult>::round_style;
   };
+#else
+template<>
+struct numeric_limits<moins::si8>: moins::detail_::numeric_limits<moins::si8>{};
+template<>
+struct numeric_limits<moins::si16>: moins::detail_::numeric_limits<moins::si16>{};
+template<>
+struct numeric_limits<moins::si32>: moins::detail_::numeric_limits<moins::si32>{};
+template<>
+struct numeric_limits<moins::si64>: moins::detail_::numeric_limits<moins::si64>{};
+template<>
+struct numeric_limits<moins::ui8>: moins::detail_::numeric_limits<moins::ui8>{};
+template<>
+struct numeric_limits<moins::ui16>: moins::detail_::numeric_limits<moins::ui16>{};
+template<>
+struct numeric_limits<moins::ui32>: moins::detail_::numeric_limits<moins::ui32>{};
+template<>
+struct numeric_limits<moins::ui64>: moins::detail_::numeric_limits<moins::ui64>{};
 
+#endif
 }
 
 
