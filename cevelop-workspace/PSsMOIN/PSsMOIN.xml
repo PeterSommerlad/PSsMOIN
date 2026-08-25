@@ -1,5 +1,5 @@
 <testsuites>
-	<testsuite name="AllTests pssmoin" tests="43">
+	<testsuite name="AllTests pssmoin" tests="51">
 		<testcase classname="AllTests pssmoin" name="ui16intExists"/>
 		<testcase classname="AllTests pssmoin" name="ui16NotEqualAutomaticInCpp20"/>
 		<testcase classname="AllTests pssmoin" name="ui16canbeadded"/>
@@ -43,6 +43,14 @@
 		<testcase classname="AllTests pssmoin" name="ui32CanNotbeComparedwithlong"/>
 		<testcase classname="AllTests pssmoin" name="signedIntegerBoundaryTestResultRecovery"/>
 		<testcase classname="AllTests pssmoin" name="DemonstrateWrapAround"/>
+		<testcase classname="AllTests pssmoin" name="skalarmultbyUnsignedTest"/>
+		<testcase classname="AllTests pssmoin" name="skalarmultUnsignedTest"/>
+		<testcase classname="AllTests pssmoin" name="skalarmultbySignedTest"/>
+		<testcase classname="AllTests pssmoin" name="skalarmultSignedTest"/>
+		<testcase classname="AllTests pssmoin" name="skalardivbyUnsignedTest"/>
+		<testcase classname="AllTests pssmoin" name="skalardivUnsignedTest"/>
+		<testcase classname="AllTests pssmoin" name="skalardivbySignedTest"/>
+		<testcase classname="AllTests pssmoin" name="skalardivSignedTest"/>
 	</testsuite>
 	<testsuite name="CodeGenBenchmark" tests="22">
 		<testcase classname="CodeGenBenchmark" name="codegenAdditionTest"/>

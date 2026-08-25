@@ -6,7 +6,9 @@
 #include <iosfwd>
 #include <limits>
 #include <climits>
-
+#ifdef __cpp_concepts
+#include <concepts>
+#endif
 
 // configurable error notifications
 // define to non-zero for self-kill with core dump, testing requires 0 for throw
@@ -167,6 +169,9 @@ is_scoped_enum_v = !std::is_convertible_v<T, std::underlying_type_t<T>>;
 // detection concept
 
 #if __cplusplus >= 202002L
+template<typename T>
+constexpr bool
+is_moduloint_v = false;
 
 template<a_scoped_enum E>
 constexpr bool
@@ -556,12 +561,15 @@ requires same_signedness<LEFT,RIGHT>
 #ifdef __cpp_concepts
 template<a_moduloint LEFT, a_moduloint RIGHT>
 #else
-template<typename LEFT, typename RIGHT, typename=std::enable_if_t<detail_::is_moduloint_v<LEFT>&&detail_::is_moduloint_v<RIGHT> && detail_::same_signedness_v<LEFT,RIGHT>,void>>
+template<typename LEFT, typename RIGHT>
 #endif
 constexpr auto
 operator*(LEFT l, RIGHT r) noexcept
 #ifdef __cpp_concepts
 requires same_signedness<LEFT,RIGHT>
+#else
+-> std::enable_if_t<detail_::is_moduloint_v<LEFT>&&detail_::is_moduloint_v<RIGHT> && detail_::same_signedness_v<LEFT,RIGHT>,
+std::conditional_t<sizeof(LEFT)>=sizeof(RIGHT),LEFT,RIGHT> >
 #endif
 {
     using result_t=std::conditional_t<sizeof(LEFT)>=sizeof(RIGHT),LEFT,RIGHT>;
@@ -574,6 +582,37 @@ requires same_signedness<LEFT,RIGHT>
             )
     );
 }
+
+#ifdef __cpp_concepts
+template<a_moduloint LEFT, std::integral RIGHT>
+constexpr auto
+operator*(LEFT l, RIGHT r) noexcept
+{
+        return l * from_int_to<LEFT>(r);
+}
+template<std::integral LEFT, a_moduloint RIGHT>
+constexpr auto
+operator*(LEFT l, RIGHT r) noexcept
+{
+        return from_int_to<RIGHT>(l) * r;
+}
+
+#else
+template<typename LEFT, typename RIGHT, typename=std::enable_if_t<
+(detail_::is_moduloint_v<LEFT>&&std::is_integral_v<RIGHT>) ||
+(detail_::is_moduloint_v<RIGHT>&&std::is_integral_v<LEFT>),void> >
+constexpr auto
+operator*(LEFT l, RIGHT r) noexcept
+{
+    if constexpr (detail_::is_moduloint_v<LEFT>)
+        return l * from_int_to<LEFT>(r);
+    else
+        return from_int_to<RIGHT>(l) * r;
+
+}
+#endif
+
+
 #ifdef __cpp_concepts
 template<a_moduloint LEFT, a_moduloint RIGHT>
 #else
@@ -589,6 +628,23 @@ requires same_signedness<LEFT,RIGHT>
     l = static_cast<LEFT>(l*r);
     return l;
 }
+#ifdef __cpp_concepts
+template<a_moduloint LEFT, std::integral RIGHT>
+constexpr auto&
+#else
+template<typename LEFT, typename RIGHT>
+constexpr auto
+#endif
+operator*=(LEFT &l, RIGHT r) noexcept
+#ifndef __cpp_concepts
+->std::enable_if_t<detail_::is_moduloint_v<LEFT> && std::is_integral_v<RIGHT>, LEFT&>
+#endif
+{
+    return l *= from_int_to<LEFT>(r);
+}
+
+
+
 #ifdef __cpp_concepts
 template<a_moduloint LEFT, a_moduloint RIGHT>
 #else
@@ -628,6 +684,20 @@ requires same_signedness<LEFT,RIGHT>
 
 }
 #ifdef __cpp_concepts
+template<a_moduloint LEFT, std::integral RIGHT>
+#else
+template<typename LEFT, typename RIGHT>
+#endif
+constexpr auto
+operator/(LEFT l, RIGHT r)
+#ifndef __cpp_concepts
+-> std::enable_if_t<detail_::is_moduloint_v<LEFT> && std::is_integral_v<RIGHT>, LEFT>
+#endif
+{
+    return l / from_int_to<LEFT>(r);
+}
+
+#ifdef __cpp_concepts
 template<a_moduloint LEFT, a_moduloint RIGHT>
 #else
 template<typename LEFT, typename RIGHT, typename=std::enable_if_t<detail_::is_moduloint_v<LEFT>&&detail_::is_moduloint_v<RIGHT> && detail_::same_signedness_v<LEFT,RIGHT>,void>>
@@ -642,6 +712,21 @@ requires same_signedness<LEFT,RIGHT>
     l = static_cast<LEFT>(l/r);
     return l;
 }
+#ifdef __cpp_concepts
+template<a_moduloint LEFT, std::integral RIGHT>
+constexpr auto&
+#else
+template<typename LEFT, typename RIGHT>
+constexpr auto
+#endif
+operator/=(LEFT &l, RIGHT r) noexcept
+#ifndef __cpp_concepts
+->std::enable_if_t<detail_::is_moduloint_v<LEFT> && std::is_integral_v<RIGHT>, LEFT&>
+#endif
+{
+    return l /= from_int_to<LEFT>(r);
+}
+
 #ifdef __cpp_concepts
 template<a_moduloint LEFT, a_moduloint RIGHT>
 #else
@@ -982,7 +1067,7 @@ template<typename type, typename=std::enable_if_t<pssmoin::detail_::is_moduloint
 namespace std {
 
 #ifdef __cpp_concepts
-template<a_moduloint type>
+template<pssmoin::a_moduloint type>
   struct numeric_limits<type>
   {
     using ult = pssmoin::ULT<type>;

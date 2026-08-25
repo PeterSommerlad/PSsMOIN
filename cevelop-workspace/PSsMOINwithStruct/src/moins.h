@@ -91,10 +91,11 @@ template<typename T, typename=void>
 constexpr bool is_moduloint_v = false;
 #ifdef __cpp_concepts
 template<sized_integer INT>
+constexpr bool is_moduloint_v<Moin<INT>> = true;
 #else
 template<typename INT, typename VOID=std::enable_if_t<detail_::is_known_integer_v<INT>,void>>
-#endif
 constexpr bool is_moduloint_v<Moin<INT,VOID>> = true;
+#endif
 
 template<typename C>
 struct ULT_impl;
@@ -103,7 +104,7 @@ struct ULT_impl<Moin<I>>{
     using type=I;
 };
 } // NS detail_
-#ifdef __cpp_concept
+#ifdef __cpp_concepts
 template<typename E>
 concept a_moduloint = detail_::is_moduloint_v<E>;
 #endif
@@ -426,6 +427,33 @@ struct [[nodiscard]] Moin{
         );
     }
 #ifdef __cpp_concepts
+    template<std::integral RIGHT>
+#else
+    template<typename RIGHT>
+#endif
+    friend constexpr auto
+    operator*(Moin l, RIGHT r)
+#ifndef __cpp_concepts
+    -> std::enable_if_t<std::is_integral_v<RIGHT>,Moin>
+#endif
+    {
+        return l * from_int_to<Moin>(r);
+    }
+#ifdef __cpp_concepts
+    template<std::integral LEFT>
+#else
+    template<typename LEFT>
+#endif
+    friend constexpr auto
+    operator*(LEFT l, Moin r)
+#ifndef __cpp_concepts
+    -> std::enable_if_t<std::is_integral_v<LEFT>,Moin>
+#endif
+    {
+        return from_int_to<Moin>(l) * r;
+    }
+    
+#ifdef __cpp_concepts
     template<a_moduloint RIGHT>
 #else
     template<typename RIGHT, typename=std::enable_if_t<detail_::is_moduloint_v<RIGHT> && same_signedness_v<Moin,RIGHT>,void>>
@@ -440,6 +468,21 @@ struct [[nodiscard]] Moin{
         *this = static_cast<Moin>(*this*r);
         return *this;
     }
+#ifdef __cpp_concepts
+    template<std::integral RIGHT>
+    constexpr auto&
+#else
+    template<typename RIGHT>
+    constexpr auto
+#endif
+    operator*=(RIGHT r) &
+#ifndef __cpp_concepts
+    -> std::enable_if_t<std::is_integral_v<RIGHT>,Moin&>
+#endif
+    {
+        return *this *= from_int_to<Moin>(r);
+    }
+    
 #ifdef __cpp_concepts
     template<a_moduloint RIGHT>
 #else
@@ -477,6 +520,22 @@ struct [[nodiscard]] Moin{
         }
     }
 #ifdef __cpp_concepts
+    template<std::integral RIGHT>
+#else
+    template<typename RIGHT>
+#endif
+    friend constexpr auto
+    operator/(Moin const l, RIGHT const r)
+#ifndef __cpp_concepts
+    -> std::enable_if_t<std::is_integral_v<RIGHT>,Moin>
+#endif
+    {
+        return l / from_int_to<Moin>(r);
+    }
+    // don't provide commuted operation for scalar multiplication!
+
+    
+#ifdef __cpp_concepts
     template<a_moduloint RIGHT>
 #else
     template<typename RIGHT, typename=std::enable_if_t<detail_::is_moduloint_v<RIGHT> && same_signedness_v<Moin,RIGHT>,void>>
@@ -491,6 +550,21 @@ struct [[nodiscard]] Moin{
         *this = static_cast<Moin>(*this/r);
         return *this;
     }
+#ifdef __cpp_concepts
+    template<std::integral RIGHT>
+    constexpr auto&
+#else
+    template<typename RIGHT>
+    constexpr auto
+#endif
+    operator/=(RIGHT r) &
+#ifndef __cpp_concepts
+    -> std::enable_if_t<std::is_integral_v<RIGHT>,Moin&>
+#endif
+    {
+        return *this /= from_int_to<Moin>(r);
+    }
+    
 #ifdef __cpp_concepts
     template<a_moduloint RIGHT>
 #else
