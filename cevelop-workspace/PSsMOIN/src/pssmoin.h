@@ -6,6 +6,7 @@
 #include <iosfwd>
 #include <limits>
 #include <climits>
+#include <concepts>
 
 
 // configurable error notifications
@@ -451,6 +452,20 @@ requires same_signedness<LEFT,RIGHT>
             )
     );
 }
+
+template<a_moduloint LEFT, std::integral RIGHT>
+constexpr auto
+operator*(LEFT l, RIGHT r) noexcept
+{
+    return l * from_int_to<LEFT>(r);
+}
+template<std::integral LEFT, a_moduloint RIGHT>
+constexpr auto
+operator*(LEFT l, RIGHT r) noexcept
+{
+    return from_int_to<RIGHT>(l) * r;
+}
+
 template<a_moduloint LEFT, a_moduloint RIGHT>
 constexpr auto&
 operator*=(LEFT &l, RIGHT r) noexcept
@@ -460,6 +475,15 @@ requires same_signedness<LEFT,RIGHT>
     l = static_cast<LEFT>(l*r);
     return l;
 }
+template<a_moduloint LEFT, std::integral RIGHT>
+constexpr auto&
+operator*=(LEFT &l, RIGHT r) noexcept
+{
+    return l *= from_int_to<LEFT>(r);
+}
+
+
+
 template<a_moduloint LEFT, a_moduloint RIGHT>
 constexpr auto
 operator/(LEFT l, RIGHT r)
@@ -492,6 +516,13 @@ requires same_signedness<LEFT,RIGHT>
     }
 
 }
+
+template<a_moduloint LEFT, std::integral RIGHT>
+constexpr auto
+operator/(LEFT l, RIGHT r){
+    return l / from_int_to<LEFT>(r);
+}
+
 template<a_moduloint LEFT, a_moduloint RIGHT>
 constexpr auto&
 operator/=(LEFT &l, RIGHT r)
@@ -501,6 +532,14 @@ requires same_signedness<LEFT,RIGHT>
     l = static_cast<LEFT>(l/r);
     return l;
 }
+template<a_moduloint LEFT, std::integral RIGHT>
+constexpr auto&
+operator/=(LEFT &l, RIGHT r) noexcept
+{
+    return l /= from_int_to<LEFT>(r);
+}
+
+
 template<a_moduloint LEFT, a_moduloint RIGHT>
 constexpr auto
 operator%(LEFT l, RIGHT r)

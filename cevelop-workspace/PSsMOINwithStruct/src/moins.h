@@ -319,6 +319,20 @@ struct [[nodiscard]] Moin{
                 )
         );
     }
+    template<std::integral RIGHT>
+    friend constexpr auto
+    operator*(Moin l, RIGHT r)
+    {
+        return l * from_int_to<Moin>(r);
+    }
+    template<std::integral LEFT>
+    friend constexpr auto
+    operator*(LEFT l, Moin r)
+    {
+        return from_int_to<Moin>(l) * r;
+    }
+
+
     template<a_moduloint RIGHT>
     constexpr auto&
     operator*=(RIGHT r) &
@@ -327,6 +341,13 @@ struct [[nodiscard]] Moin{
         static_assert(sizeof(Moin) >= sizeof(RIGHT),"multiplying too large integer type");
         *this = static_cast<Moin>(*this*r);
         return *this;
+    }
+
+    template<std::integral RIGHT>
+    constexpr auto&
+    operator*=(RIGHT r) &
+    {
+        return *this *= from_int_to<Moin>(r);
     }
     template<a_moduloint RIGHT>
     friend constexpr auto
@@ -358,6 +379,15 @@ struct [[nodiscard]] Moin{
         );
         }
     }
+    template<std::integral RIGHT>
+    friend constexpr auto
+    operator/(Moin const l, RIGHT const r)
+    {
+        return l / from_int_to<Moin>(r);
+    }
+    // don't provide commuted operation for scalar multiplication!
+
+
     template<a_moduloint RIGHT>
     constexpr auto&
     operator/=(RIGHT r) &
@@ -367,6 +397,14 @@ struct [[nodiscard]] Moin{
         *this = static_cast<Moin>(*this/r);
         return *this;
     }
+    template<std::integral RIGHT>
+    constexpr auto&
+    operator/=(RIGHT r) &
+    {
+        return *this /= from_int_to<Moin>(r);
+    }
+
+
     template<a_moduloint RIGHT>
     friend constexpr auto
     operator%(Moin l, RIGHT r)
