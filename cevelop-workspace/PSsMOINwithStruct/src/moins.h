@@ -8,7 +8,9 @@
 #include <limits>
 #include <climits>
 #include <compare>
+#ifdef __cpp_concepts
 #include <concepts>
+#endif
 
 // define to non-zero for self-kill with core dump, testing requires 0 for throw
 // define to non-zero for self-kill with core dump, testing requires 0 for throw

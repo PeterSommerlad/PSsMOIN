@@ -244,10 +244,15 @@ is_compatible_integer_v = std::is_same_v<plain<TESTED>,INT> ||
    && (std::is_unsigned_v<INT> == std::is_unsigned_v<plain<TESTED>>)
    && std::numeric_limits<plain<TESTED>>::max() == std::numeric_limits<INT>::max() );
 
+template<typename TESTED,typename=void>
+constexpr bool
+is_known_integer_v=false;
 
+// only support the following sizes:
 template<typename TESTED>
 constexpr bool
-is_known_integer_v =    is_compatible_integer_v<std::uint8_t,  TESTED>
+is_known_integer_v<TESTED,std::enable_if_t<std::is_integral_v<TESTED>>> =
+                        is_compatible_integer_v<std::uint8_t,  TESTED>
                      || is_compatible_integer_v<std::uint16_t, TESTED>
                      || is_compatible_integer_v<std::uint32_t, TESTED>
                      || is_compatible_integer_v<std::uint64_t, TESTED>
@@ -308,12 +313,12 @@ promote_to_unsigned(E val) noexcept
 #ifdef __cpp_concepts
 // deliberately not std::integral, because of bool and characters!
 template<typename T>
-concept an_integer = detail_::is_known_integer_v<T>;
+concept sized_integer = detail_::is_known_integer_v<T>;
 #endif
 
 namespace detail_{
 #ifdef __cpp_concepts
-template<an_integer TARGET, a_moduloint E>
+template<sized_integer TARGET, a_moduloint E>
 #else
 template<typename TARGET, typename E, typename=std::enable_if_t<is_known_integer_v<TARGET> && is_moduloint_v<E>,void>>
 #endif
@@ -327,7 +332,7 @@ promote_and_extend_to_unsigned(E val) noexcept
        return static_cast<u_result_t>(static_cast<s_result_t>(promote_keep_signedness(val)));// promote with sign extension
 }
 #ifdef __cpp_concepts
-template<an_integer TARGET, a_moduloint E>
+template<sized_integer TARGET, a_moduloint E>
 #else
 template<typename TARGET, typename E, typename=std::enable_if_t<
 is_known_integer_v<TARGET> &&
@@ -360,7 +365,7 @@ abs_promoted_and_extended_as_unsigned(E val) noexcept
 
 
 #ifdef __cpp_concepts
-template<an_integer T>
+template<sized_integer T>
 #else
 template<typename T, typename=std::enable_if_t<detail_::is_known_integer_v<T>,void>>
 #endif
@@ -382,7 +387,7 @@ from_int(T val) noexcept {
     return static_cast<result_t>(val);
 }
 #ifdef __cpp_concepts
-template<a_moduloint TO, an_integer FROM>
+template<a_moduloint TO, sized_integer FROM>
 #else
 template<typename TO, typename FROM, typename=std::enable_if_t<detail_::is_known_integer_v<FROM> && detail_::is_moduloint_v<TO>,void>>
 #endif
@@ -584,13 +589,13 @@ std::conditional_t<sizeof(LEFT)>=sizeof(RIGHT),LEFT,RIGHT> >
 }
 
 #ifdef __cpp_concepts
-template<a_moduloint LEFT, std::integral RIGHT>
+template<a_moduloint LEFT, sized_integer RIGHT>
 constexpr auto
 operator*(LEFT l, RIGHT r) noexcept
 {
         return l * from_int_to<LEFT>(r);
 }
-template<std::integral LEFT, a_moduloint RIGHT>
+template<sized_integer LEFT, a_moduloint RIGHT>
 constexpr auto
 operator*(LEFT l, RIGHT r) noexcept
 {
@@ -599,8 +604,8 @@ operator*(LEFT l, RIGHT r) noexcept
 
 #else
 template<typename LEFT, typename RIGHT, typename=std::enable_if_t<
-(detail_::is_moduloint_v<LEFT>&&std::is_integral_v<RIGHT>) ||
-(detail_::is_moduloint_v<RIGHT>&&std::is_integral_v<LEFT>),void> >
+(detail_::is_moduloint_v<LEFT>&&detail_::is_known_integer_v<RIGHT>) ||
+(detail_::is_moduloint_v<RIGHT>&&detail_::is_known_integer_v<LEFT>),void> >
 constexpr auto
 operator*(LEFT l, RIGHT r) noexcept
 {
@@ -629,7 +634,7 @@ requires same_signedness<LEFT,RIGHT>
     return l;
 }
 #ifdef __cpp_concepts
-template<a_moduloint LEFT, std::integral RIGHT>
+template<a_moduloint LEFT, sized_integer RIGHT>
 constexpr auto&
 #else
 template<typename LEFT, typename RIGHT>
@@ -637,7 +642,7 @@ constexpr auto
 #endif
 operator*=(LEFT &l, RIGHT r) noexcept
 #ifndef __cpp_concepts
-->std::enable_if_t<detail_::is_moduloint_v<LEFT> && std::is_integral_v<RIGHT>, LEFT&>
+->std::enable_if_t<detail_::is_moduloint_v<LEFT> && detail_::is_known_integer_v<RIGHT>, LEFT&>
 #endif
 {
     return l *= from_int_to<LEFT>(r);
@@ -684,14 +689,14 @@ requires same_signedness<LEFT,RIGHT>
 
 }
 #ifdef __cpp_concepts
-template<a_moduloint LEFT, std::integral RIGHT>
+template<a_moduloint LEFT, sized_integer RIGHT>
 #else
 template<typename LEFT, typename RIGHT>
 #endif
 constexpr auto
 operator/(LEFT l, RIGHT r)
 #ifndef __cpp_concepts
--> std::enable_if_t<detail_::is_moduloint_v<LEFT> && std::is_integral_v<RIGHT>, LEFT>
+-> std::enable_if_t<detail_::is_moduloint_v<LEFT> && detail_::is_known_integer_v<RIGHT>, LEFT>
 #endif
 {
     return l / from_int_to<LEFT>(r);
@@ -713,7 +718,7 @@ requires same_signedness<LEFT,RIGHT>
     return l;
 }
 #ifdef __cpp_concepts
-template<a_moduloint LEFT, std::integral RIGHT>
+template<a_moduloint LEFT, sized_integer RIGHT>
 constexpr auto&
 #else
 template<typename LEFT, typename RIGHT>
@@ -721,7 +726,7 @@ constexpr auto
 #endif
 operator/=(LEFT &l, RIGHT r) noexcept
 #ifndef __cpp_concepts
-->std::enable_if_t<detail_::is_moduloint_v<LEFT> && std::is_integral_v<RIGHT>, LEFT&>
+->std::enable_if_t<detail_::is_moduloint_v<LEFT> && detail_::is_known_integer_v<RIGHT>, LEFT&>
 #endif
 {
     return l /= from_int_to<LEFT>(r);
