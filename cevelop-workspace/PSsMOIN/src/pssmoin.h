@@ -209,9 +209,15 @@ is_compatible_integer_v = std::is_same_v<plain<TESTED>,INT> ||
    && std::numeric_limits<plain<TESTED>>::max() == std::numeric_limits<INT>::max() );
 
 
+template<typename TESTED,typename=void>
+constexpr bool
+is_known_integer_v=false;
+
+// only support the following sizes:
 template<typename TESTED>
 constexpr bool
-is_known_integer_v =    is_compatible_integer_v<std::uint8_t,  TESTED>
+is_known_integer_v<TESTED,std::enable_if_t<std::is_integral_v<TESTED>>> =
+                        is_compatible_integer_v<std::uint8_t,  TESTED>
                      || is_compatible_integer_v<std::uint16_t, TESTED>
                      || is_compatible_integer_v<std::uint32_t, TESTED>
                      || is_compatible_integer_v<std::uint64_t, TESTED>
@@ -253,10 +259,10 @@ promote_to_unsigned(E val) noexcept
 
 // deliberately not std::integral, because of bool and characters!
 template<typename T>
-concept an_integer = detail_::is_known_integer_v<T>;
+concept sized_integer = detail_::is_known_integer_v<T>;
 
 namespace detail_{
-template<an_integer TARGET, a_moduloint E>
+template<sized_integer TARGET, a_moduloint E>
 [[nodiscard]]
 constexpr auto
 promote_and_extend_to_unsigned(E val) noexcept
@@ -266,7 +272,7 @@ promote_and_extend_to_unsigned(E val) noexcept
        using s_result_t = std::make_signed_t<u_result_t>;
        return static_cast<u_result_t>(static_cast<s_result_t>(promote_keep_signedness(val)));// promote with sign extension
 }
-template<an_integer TARGET, a_moduloint E>
+template<sized_integer TARGET, a_moduloint E>
 [[nodiscard]]
 constexpr auto
 abs_promoted_and_extended_as_unsigned(E val) noexcept
@@ -291,7 +297,7 @@ abs_promoted_and_extended_as_unsigned(E val) noexcept
 
 
 
-template<an_integer T>
+template<sized_integer T>
 [[nodiscard]]
 constexpr auto
 from_int(T val) noexcept {
@@ -309,7 +315,7 @@ from_int(T val) noexcept {
                    conditional_t<is_compatible_integer_v<std::int64_t,T>, si64, cannot_convert_integer>>>>>>>>;
     return static_cast<result_t>(val);
 }
-template<a_moduloint TO, an_integer FROM>
+template<a_moduloint TO, sized_integer FROM>
 [[nodiscard]]
 constexpr auto
 from_int_to(FROM val)
@@ -453,13 +459,13 @@ requires same_signedness<LEFT,RIGHT>
     );
 }
 
-template<a_moduloint LEFT, std::integral RIGHT>
+template<a_moduloint LEFT, sized_integer RIGHT>
 constexpr auto
 operator*(LEFT l, RIGHT r) noexcept
 {
     return l * from_int_to<LEFT>(r);
 }
-template<std::integral LEFT, a_moduloint RIGHT>
+template<sized_integer LEFT, a_moduloint RIGHT>
 constexpr auto
 operator*(LEFT l, RIGHT r) noexcept
 {
@@ -475,7 +481,7 @@ requires same_signedness<LEFT,RIGHT>
     l = static_cast<LEFT>(l*r);
     return l;
 }
-template<a_moduloint LEFT, std::integral RIGHT>
+template<a_moduloint LEFT, sized_integer RIGHT>
 constexpr auto&
 operator*=(LEFT &l, RIGHT r) noexcept
 {
@@ -517,7 +523,7 @@ requires same_signedness<LEFT,RIGHT>
 
 }
 
-template<a_moduloint LEFT, std::integral RIGHT>
+template<a_moduloint LEFT, sized_integer RIGHT>
 constexpr auto
 operator/(LEFT l, RIGHT r){
     return l / from_int_to<LEFT>(r);
@@ -532,7 +538,7 @@ requires same_signedness<LEFT,RIGHT>
     l = static_cast<LEFT>(l/r);
     return l;
 }
-template<a_moduloint LEFT, std::integral RIGHT>
+template<a_moduloint LEFT, sized_integer RIGHT>
 constexpr auto&
 operator/=(LEFT &l, RIGHT r) noexcept
 {
