@@ -160,7 +160,7 @@ using plain = std::remove_cv_t<std::remove_reference_t<T>>;
 template<typename T>
 constexpr bool an_enum = std::is_enum_v<plain<T>>;
 
-template<typename T, typename = std::enable_if_t<an_enum<T>,void>>
+template<typename T, typename = std::enable_if_t<an_enum<T>>>
 constexpr bool
 is_scoped_enum_v = !std::is_convertible_v<T, std::underlying_type_t<T>>;
 
@@ -218,7 +218,7 @@ namespace detail_{
 #ifdef __cpp_concepts
 template<a_moduloint LEFT, a_moduloint RIGHT>
 #else
-template<typename LEFT, typename RIGHT, typename=std::enable_if_t<is_moduloint_v<LEFT> && is_moduloint_v<RIGHT>,void>>
+template<typename LEFT, typename RIGHT, typename=std::enable_if_t<is_moduloint_v<LEFT> && is_moduloint_v<RIGHT>>>
 #endif
 constexpr bool
 same_signedness_v = is_moduloint_v<LEFT> && is_moduloint_v<RIGHT> && std::numeric_limits<LEFT>::is_signed == std::numeric_limits<RIGHT>::is_signed;
@@ -275,7 +275,7 @@ same_signedness_v = detail_::is_moduloint_v<LEFT> && detail_::is_moduloint_v<RIG
 #ifdef __cpp_concepts
 template<a_moduloint E>
 #else
-template<typename E,typename=std::enable_if_t<detail_::is_moduloint_v<E>,void>>
+template<typename E,typename=std::enable_if_t<detail_::is_moduloint_v<E>>>
 #endif
 [[nodiscard]]
 constexpr auto
@@ -288,7 +288,7 @@ promote_keep_signedness(E val) noexcept
 #ifdef __cpp_concepts
 template<a_moduloint E>
 #else
-template<typename E,typename=std::enable_if_t<detail_::is_moduloint_v<E>,void>>
+template<typename E,typename=std::enable_if_t<detail_::is_moduloint_v<E>>>
 #endif
 [[nodiscard]]
 constexpr auto
@@ -300,7 +300,7 @@ to_underlying(E val) noexcept
 #ifdef __cpp_concepts
 template<a_moduloint E>
 #else
-template<typename E,typename=std::enable_if_t<detail_::is_moduloint_v<E>,void>>
+template<typename E,typename=std::enable_if_t<detail_::is_moduloint_v<E>>>
 #endif
 [[nodiscard]]
 constexpr auto
@@ -320,7 +320,7 @@ namespace detail_{
 #ifdef __cpp_concepts
 template<sized_integer TARGET, a_moduloint E>
 #else
-template<typename TARGET, typename E, typename=std::enable_if_t<is_known_integer_v<TARGET> && is_moduloint_v<E>,void>>
+template<typename TARGET, typename E, typename=std::enable_if_t<is_known_integer_v<TARGET> && is_moduloint_v<E>>>
 #endif
 [[nodiscard]]
 constexpr auto
@@ -337,7 +337,7 @@ template<sized_integer TARGET, a_moduloint E>
 template<typename TARGET, typename E, typename=std::enable_if_t<
 is_known_integer_v<TARGET> &&
 std::numeric_limits<TARGET>::is_signed &&
-is_moduloint_v<E>,void>>
+is_moduloint_v<E>>>
 #endif
 [[nodiscard]]
 constexpr auto
@@ -367,7 +367,7 @@ abs_promoted_and_extended_as_unsigned(E val) noexcept
 #ifdef __cpp_concepts
 template<sized_integer T>
 #else
-template<typename T, typename=std::enable_if_t<detail_::is_known_integer_v<T>,void>>
+template<typename T, typename=std::enable_if_t<detail_::is_known_integer_v<T>>>
 #endif
 [[nodiscard]]
 constexpr auto
@@ -389,7 +389,7 @@ from_int(T val) noexcept {
 #ifdef __cpp_concepts
 template<a_moduloint TO, sized_integer FROM>
 #else
-template<typename TO, typename FROM, typename=std::enable_if_t<detail_::is_known_integer_v<FROM> && detail_::is_moduloint_v<TO>,void>>
+template<typename TO, typename FROM, typename=std::enable_if_t<detail_::is_known_integer_v<FROM> && detail_::is_moduloint_v<TO>>>
 #endif
 [[nodiscard]]
 constexpr auto
@@ -421,7 +421,7 @@ from_int_to(FROM val)
 #ifdef __cpp_concepts
 template<a_moduloint E>
 #else
-template<typename E,typename=std::enable_if_t<detail_::is_moduloint_v<E> && std::numeric_limits<E>::is_signed ,void>>
+template<typename E,typename=std::enable_if_t<detail_::is_moduloint_v<E> && std::numeric_limits<E>::is_signed >>
 #endif
 constexpr E
 operator-(E l) noexcept
@@ -437,7 +437,7 @@ requires std::numeric_limits<E>::is_signed
 #ifdef __cpp_concepts
 template<a_moduloint E>
 #else
-template<typename E,typename=std::enable_if_t<detail_::is_moduloint_v<E>,void>>
+template<typename E,typename=std::enable_if_t<detail_::is_moduloint_v<E>>>
 #endif
 constexpr E&
 operator++(E& l) noexcept
@@ -448,7 +448,7 @@ operator++(E& l) noexcept
 #ifdef __cpp_concepts
 template<a_moduloint E>
 #else
-template<typename E,typename=std::enable_if_t<detail_::is_moduloint_v<E>,void>>
+template<typename E,typename=std::enable_if_t<detail_::is_moduloint_v<E>>>
 #endif
 constexpr E
 operator++(E& l, int) noexcept
@@ -460,7 +460,7 @@ operator++(E& l, int) noexcept
 #ifdef __cpp_concepts
 template<a_moduloint E>
 #else
-template<typename E,typename=std::enable_if_t<detail_::is_moduloint_v<E>,void>>
+template<typename E,typename=std::enable_if_t<detail_::is_moduloint_v<E>>>
 #endif
 constexpr E&
 operator--(E& l) noexcept {
@@ -470,7 +470,7 @@ operator--(E& l) noexcept {
 #ifdef __cpp_concepts
 template<a_moduloint E>
 #else
-template<typename E,typename=std::enable_if_t<detail_::is_moduloint_v<E>,void>>
+template<typename E,typename=std::enable_if_t<detail_::is_moduloint_v<E>>>
 #endif
 constexpr E
 operator--(E& l, int) noexcept {
@@ -487,7 +487,7 @@ operator--(E& l, int) noexcept {
 #ifdef __cpp_concepts
 template<a_moduloint LEFT, a_moduloint RIGHT>
 #else
-template<typename LEFT, typename RIGHT, typename=std::enable_if_t<detail_::is_moduloint_v<LEFT>&&detail_::is_moduloint_v<RIGHT> && detail_::same_signedness_v<LEFT,RIGHT>,void>>
+template<typename LEFT, typename RIGHT, typename=std::enable_if_t<detail_::is_moduloint_v<LEFT>&&detail_::is_moduloint_v<RIGHT> && detail_::same_signedness_v<LEFT,RIGHT>>>
 #endif
 constexpr auto
 operator+(LEFT l, RIGHT r) noexcept
@@ -511,7 +511,7 @@ requires same_signedness<LEFT,RIGHT>
 #ifdef __cpp_concepts
 template<a_moduloint LEFT, a_moduloint RIGHT>
 #else
-template<typename LEFT, typename RIGHT, typename=std::enable_if_t<detail_::is_moduloint_v<LEFT>&&detail_::is_moduloint_v<RIGHT> && detail_::same_signedness_v<LEFT,RIGHT>,void>>
+template<typename LEFT, typename RIGHT, typename=std::enable_if_t<detail_::is_moduloint_v<LEFT>&&detail_::is_moduloint_v<RIGHT> && detail_::same_signedness_v<LEFT,RIGHT>>>
 #endif
 constexpr auto&
 operator+=(LEFT &l, RIGHT r) noexcept
@@ -527,7 +527,7 @@ requires same_signedness<LEFT,RIGHT>
 #ifdef __cpp_concepts
 template<a_moduloint LEFT, a_moduloint RIGHT>
 #else
-template<typename LEFT, typename RIGHT, typename=std::enable_if_t<detail_::is_moduloint_v<LEFT>&&detail_::is_moduloint_v<RIGHT> && detail_::same_signedness_v<LEFT,RIGHT>,void>>
+template<typename LEFT, typename RIGHT, typename=std::enable_if_t<detail_::is_moduloint_v<LEFT>&&detail_::is_moduloint_v<RIGHT> && detail_::same_signedness_v<LEFT,RIGHT>>>
 #endif
 constexpr auto
 operator-(LEFT l, RIGHT r) noexcept
@@ -549,7 +549,7 @@ requires same_signedness<LEFT,RIGHT>
 #ifdef __cpp_concepts
 template<a_moduloint LEFT, a_moduloint RIGHT>
 #else
-template<typename LEFT, typename RIGHT, typename=std::enable_if_t<detail_::is_moduloint_v<LEFT>&&detail_::is_moduloint_v<RIGHT> && detail_::same_signedness_v<LEFT,RIGHT>,void>>
+template<typename LEFT, typename RIGHT, typename=std::enable_if_t<detail_::is_moduloint_v<LEFT>&&detail_::is_moduloint_v<RIGHT> && detail_::same_signedness_v<LEFT,RIGHT>>>
 #endif
 constexpr auto&
 operator-=(LEFT &l, RIGHT r) noexcept
@@ -605,7 +605,7 @@ operator*(LEFT l, RIGHT r) noexcept
 #else
 template<typename LEFT, typename RIGHT, typename=std::enable_if_t<
 (detail_::is_moduloint_v<LEFT>&&detail_::is_known_integer_v<RIGHT>) ||
-(detail_::is_moduloint_v<RIGHT>&&detail_::is_known_integer_v<LEFT>),void> >
+(detail_::is_moduloint_v<RIGHT>&&detail_::is_known_integer_v<LEFT>)> >
 constexpr auto
 operator*(LEFT l, RIGHT r) noexcept
 {
@@ -621,7 +621,7 @@ operator*(LEFT l, RIGHT r) noexcept
 #ifdef __cpp_concepts
 template<a_moduloint LEFT, a_moduloint RIGHT>
 #else
-template<typename LEFT, typename RIGHT, typename=std::enable_if_t<detail_::is_moduloint_v<LEFT>&&detail_::is_moduloint_v<RIGHT> && detail_::same_signedness_v<LEFT,RIGHT>,void>>
+template<typename LEFT, typename RIGHT, typename=std::enable_if_t<detail_::is_moduloint_v<LEFT>&&detail_::is_moduloint_v<RIGHT> && detail_::same_signedness_v<LEFT,RIGHT>>>
 #endif
 constexpr auto&
 operator*=(LEFT &l, RIGHT r) noexcept
@@ -653,7 +653,7 @@ operator*=(LEFT &l, RIGHT r) noexcept
 #ifdef __cpp_concepts
 template<a_moduloint LEFT, a_moduloint RIGHT>
 #else
-template<typename LEFT, typename RIGHT, typename=std::enable_if_t<detail_::is_moduloint_v<LEFT>&&detail_::is_moduloint_v<RIGHT> && detail_::same_signedness_v<LEFT,RIGHT>,void>>
+template<typename LEFT, typename RIGHT, typename=std::enable_if_t<detail_::is_moduloint_v<LEFT>&&detail_::is_moduloint_v<RIGHT> && detail_::same_signedness_v<LEFT,RIGHT>>>
 #endif
 constexpr auto
 operator/(LEFT l, RIGHT r)
@@ -705,7 +705,7 @@ operator/(LEFT l, RIGHT r)
 #ifdef __cpp_concepts
 template<a_moduloint LEFT, a_moduloint RIGHT>
 #else
-template<typename LEFT, typename RIGHT, typename=std::enable_if_t<detail_::is_moduloint_v<LEFT>&&detail_::is_moduloint_v<RIGHT> && detail_::same_signedness_v<LEFT,RIGHT>,void>>
+template<typename LEFT, typename RIGHT, typename=std::enable_if_t<detail_::is_moduloint_v<LEFT>&&detail_::is_moduloint_v<RIGHT> && detail_::same_signedness_v<LEFT,RIGHT>>>
 #endif
 constexpr auto&
 operator/=(LEFT &l, RIGHT r)
@@ -739,7 +739,7 @@ template<typename LEFT, typename RIGHT, typename=std::enable_if_t<
 detail_::is_moduloint_v<LEFT> &&
 detail_::is_moduloint_v<RIGHT> &&
 detail_::same_signedness_v<LEFT,RIGHT> &&
-std::is_unsigned_v<ULT<LEFT>>,void>>
+std::is_unsigned_v<ULT<LEFT>>>>
 #endif
 constexpr auto
 operator%(LEFT l, RIGHT r)
@@ -765,7 +765,7 @@ template<typename LEFT, typename RIGHT, typename=std::enable_if_t<
 detail_::is_moduloint_v<LEFT> &&
 detail_::is_moduloint_v<RIGHT> &&
 detail_::same_signedness_v<LEFT,RIGHT> &&
-std::is_unsigned_v<ULT<LEFT>>,void>>
+std::is_unsigned_v<ULT<LEFT>>>>
 #endif
 constexpr auto&
 operator%=(LEFT &l, RIGHT r)
@@ -787,7 +787,7 @@ template<typename LEFT, typename RIGHT, typename=std::enable_if_t<
 detail_::is_moduloint_v<LEFT> &&
 detail_::is_moduloint_v<RIGHT> &&
 std::is_unsigned_v<ULT<LEFT>> &&
-std::is_unsigned_v<ULT<RIGHT>>,void>>
+std::is_unsigned_v<ULT<RIGHT>>>>
 #endif
 constexpr auto
 operator&(LEFT l, RIGHT r) noexcept
@@ -805,7 +805,7 @@ template<typename LEFT, typename RIGHT, typename=std::enable_if_t<
 detail_::is_moduloint_v<LEFT> &&
 detail_::is_moduloint_v<RIGHT> &&
 std::is_unsigned_v<ULT<LEFT>> &&
-std::is_unsigned_v<ULT<RIGHT>>,void>>
+std::is_unsigned_v<ULT<RIGHT>>>>
 #endif
 constexpr auto&
 operator&=(LEFT &l, RIGHT r) noexcept
@@ -825,7 +825,7 @@ template<typename LEFT, typename RIGHT, typename=std::enable_if_t<
 detail_::is_moduloint_v<LEFT> &&
 detail_::is_moduloint_v<RIGHT> &&
 std::is_unsigned_v<ULT<LEFT>> &&
-std::is_unsigned_v<ULT<RIGHT>>,void>>
+std::is_unsigned_v<ULT<RIGHT>>>>
 #endif
 constexpr auto
 operator|(LEFT l, RIGHT r) noexcept
@@ -843,7 +843,7 @@ template<typename LEFT, typename RIGHT, typename=std::enable_if_t<
 detail_::is_moduloint_v<LEFT> &&
 detail_::is_moduloint_v<RIGHT> &&
 std::is_unsigned_v<ULT<LEFT>> &&
-std::is_unsigned_v<ULT<RIGHT>>,void>>
+std::is_unsigned_v<ULT<RIGHT>>>>
 #endif
 constexpr auto&
 operator|=(LEFT &l, RIGHT r) noexcept
@@ -863,7 +863,7 @@ template<typename LEFT, typename RIGHT, typename=std::enable_if_t<
 detail_::is_moduloint_v<LEFT> &&
 detail_::is_moduloint_v<RIGHT> &&
 std::is_unsigned_v<ULT<LEFT>> &&
-std::is_unsigned_v<ULT<RIGHT>>,void>>
+std::is_unsigned_v<ULT<RIGHT>>>>
 #endif
 constexpr auto
 operator^(LEFT l, RIGHT r) noexcept
@@ -881,7 +881,7 @@ template<typename LEFT, typename RIGHT, typename=std::enable_if_t<
 detail_::is_moduloint_v<LEFT> &&
 detail_::is_moduloint_v<RIGHT> &&
 std::is_unsigned_v<ULT<LEFT>> &&
-std::is_unsigned_v<ULT<RIGHT>>,void>>
+std::is_unsigned_v<ULT<RIGHT>>>>
 #endif
 constexpr auto&
 operator^=(LEFT &l, RIGHT r) noexcept
@@ -898,7 +898,7 @@ template<a_moduloint LEFT>
 #else
 template<typename LEFT, typename=std::enable_if_t<
 detail_::is_moduloint_v<LEFT> &&
-std::is_unsigned_v<ULT<LEFT>> ,void>>
+std::is_unsigned_v<ULT<LEFT>> >>
 #endif
 constexpr LEFT
 operator~(LEFT l) noexcept
@@ -917,7 +917,7 @@ template<typename LEFT, typename RIGHT, typename=std::enable_if_t<
 detail_::is_moduloint_v<LEFT> &&
 detail_::is_moduloint_v<RIGHT> &&
 std::is_unsigned_v<ULT<LEFT>> &&
-std::is_unsigned_v<ULT<RIGHT>>,void>>
+std::is_unsigned_v<ULT<RIGHT>>>>
 #endif
 constexpr LEFT
 operator<<(LEFT l, RIGHT r)
@@ -936,7 +936,7 @@ template<typename LEFT, typename RIGHT, typename=std::enable_if_t<
 detail_::is_moduloint_v<LEFT> &&
 detail_::is_moduloint_v<RIGHT> &&
 std::is_unsigned_v<ULT<LEFT>> &&
-std::is_unsigned_v<ULT<RIGHT>>,void>>
+std::is_unsigned_v<ULT<RIGHT>>>>
 #endif
 constexpr auto&
 operator<<=(LEFT &l, RIGHT r)
@@ -954,7 +954,7 @@ template<typename LEFT, typename RIGHT, typename=std::enable_if_t<
 detail_::is_moduloint_v<LEFT> &&
 detail_::is_moduloint_v<RIGHT> &&
 std::is_unsigned_v<ULT<LEFT>> &&
-std::is_unsigned_v<ULT<RIGHT>>,void>>
+std::is_unsigned_v<ULT<RIGHT>>>>
 #endif
 constexpr LEFT
 operator>>(LEFT l, RIGHT r)
@@ -973,7 +973,7 @@ template<typename LEFT, typename RIGHT, typename=std::enable_if_t<
 detail_::is_moduloint_v<LEFT> &&
 detail_::is_moduloint_v<RIGHT> &&
 std::is_unsigned_v<ULT<LEFT>> &&
-std::is_unsigned_v<ULT<RIGHT>>,void>>
+std::is_unsigned_v<ULT<RIGHT>>>>
 #endif
 constexpr auto&
 operator>>=(LEFT &l, RIGHT r)
@@ -989,7 +989,7 @@ requires std::is_unsigned_v<ULT<LEFT>> && std::is_unsigned_v<ULT<RIGHT>>
 template<a_moduloint LEFT>
 #else
 template<typename LEFT, typename=std::enable_if_t<
-detail_::is_moduloint_v<LEFT>  ,void>>
+detail_::is_moduloint_v<LEFT>  >>
 #endif
 std::ostream& operator<<(std::ostream &out, LEFT  value){
     out << promote_keep_signedness(value);
@@ -998,7 +998,7 @@ std::ostream& operator<<(std::ostream &out, LEFT  value){
 
 #ifndef __cpp_concepts
 namespace detail_{
-template<typename type, typename=std::enable_if_t<pssmoin::detail_::is_moduloint_v<type>,void> >
+template<typename type, typename=std::enable_if_t<pssmoin::detail_::is_moduloint_v<type>> >
   struct numeric_limits
   {
     using ult = pssmoin::detail_::ULT<type>;

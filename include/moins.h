@@ -88,7 +88,7 @@ concept sized_integer = detail_::is_known_integer_v<TESTED>;
 #ifdef __cpp_concepts
 template<sized_integer INT>
 #else
-template<typename INT, typename=std::enable_if_t<detail_::is_known_integer_v<INT>,void>>
+template<typename INT, typename=std::enable_if_t<detail_::is_known_integer_v<INT>>>
 #endif
 struct [[nodiscard]] Moin;
 
@@ -99,7 +99,7 @@ constexpr bool is_moduloint_v = false;
 template<sized_integer INT>
 constexpr bool is_moduloint_v<Moin<INT>> = true;
 #else
-template<typename INT, typename VOID=std::enable_if_t<detail_::is_known_integer_v<INT>,void>>
+template<typename INT, typename VOID=std::enable_if_t<detail_::is_known_integer_v<INT>>>
 constexpr bool is_moduloint_v<Moin<INT,VOID>> = true;
 #endif
 
@@ -129,7 +129,7 @@ using promoted_t = // will promote the underlying type keeping signedness
 #ifdef __cpp_concept
 template<a_moduloint E>
 #else
-template<typename E, typename=std::enable_if_t<detail_::is_moduloint_v<E>,void>>
+template<typename E, typename=std::enable_if_t<detail_::is_moduloint_v<E>>>
 #endif
 [[nodiscard]]
 constexpr auto
@@ -143,7 +143,7 @@ namespace detail_ {
 #ifdef __cpp_concept
 template<a_moduloint E>
 #else
-template<typename E, typename=std::enable_if_t<detail_::is_moduloint_v<E>,void>>
+template<typename E, typename=std::enable_if_t<detail_::is_moduloint_v<E>>>
 #endif
 [[nodiscard]]
 constexpr auto
@@ -155,7 +155,7 @@ promote_to_unsigned(E value) noexcept
 #ifdef __cpp_concept
 template<sized_integer TARGET, a_moduloint E>
 #else
-template<typename TARGET, typename E, typename=std::enable_if_t<detail_::is_known_integer_v<TARGET>&&detail_::is_moduloint_v<E> ,void>>
+template<typename TARGET, typename E, typename=std::enable_if_t<detail_::is_known_integer_v<TARGET>&&detail_::is_moduloint_v<E> >>
 #endif
 [[nodiscard]]
 constexpr auto
@@ -170,7 +170,7 @@ promote_and_extend_to_unsigned(E value) noexcept
 #ifdef __cpp_concept
 template<sized_integer TARGET, a_moduloint E>
 #else
-template<typename TARGET, typename E, typename=std::enable_if_t<detail_::is_known_integer_v<TARGET>&&std::numeric_limits<TARGET>::is_signed&&detail_::is_moduloint_v<E> ,void>>
+template<typename TARGET, typename E, typename=std::enable_if_t<detail_::is_known_integer_v<TARGET>&&std::numeric_limits<TARGET>::is_signed&&detail_::is_moduloint_v<E> >>
 #endif
 [[nodiscard]]
 constexpr auto
@@ -211,7 +211,7 @@ concept same_signedness = same_signedness_v<LEFT,RIGHT>;
 #ifdef __cpp_concepts
 template<a_moduloint TO, sized_integer FROM>
 #else
-template<typename TO, typename FROM, typename=std::enable_if_t<detail_::is_moduloint_v<TO> && detail_::is_known_integer_v<FROM>, void>>
+template<typename TO, typename FROM, typename=std::enable_if_t<detail_::is_moduloint_v<TO> && detail_::is_known_integer_v<FROM>>>
 #endif
 [[nodiscard]]
 constexpr auto
@@ -238,7 +238,7 @@ from_int_to(FROM val)
 [[nodiscard]]
 constexpr auto to_underlying(moins::a_moduloint auto v){
 #else
-template<typename T, typename=std::enable_if_t<moins::detail_::is_moduloint_v<T>,void>>
+template<typename T, typename=std::enable_if_t<moins::detail_::is_moduloint_v<T>>>
 [[nodiscard]]
 constexpr auto to_underlying(T v){
 #endif
@@ -262,7 +262,7 @@ struct [[nodiscard]] Moin{
     :value_which_should_not_be_referred_to_from_user_code{from_int_to<Moin>(v)}{
     }
 #else
-    template<typename T, typename=std::enable_if_t<detail_::is_known_integer_v<T> && not std::is_same_v<T,INT>,void>>
+    template<typename T, typename=std::enable_if_t<detail_::is_known_integer_v<T> && not std::is_same_v<T,INT>>>
     explicit constexpr Moin(T v) noexcept
     :value_which_should_not_be_referred_to_from_user_code{from_int_to<Moin>(v)}{}
     explicit constexpr Moin(INT v) noexcept
@@ -336,7 +336,7 @@ struct [[nodiscard]] Moin{
 #ifdef __cpp_concepts
     template<a_moduloint RIGHT>
 #else
-    template<typename RIGHT, typename=std::enable_if_t<detail_::is_moduloint_v<RIGHT> && same_signedness_v<Moin,RIGHT>,void>>
+    template<typename RIGHT, typename=std::enable_if_t<detail_::is_moduloint_v<RIGHT> && same_signedness_v<Moin,RIGHT>>>
 #endif
     friend constexpr auto
     operator+(Moin l, RIGHT r)
@@ -360,7 +360,7 @@ struct [[nodiscard]] Moin{
 #ifdef __cpp_concepts
     template<a_moduloint RIGHT>
 #else
-    template<typename RIGHT, typename=std::enable_if_t<detail_::is_moduloint_v<RIGHT> && same_signedness_v<Moin,RIGHT>,void>>
+    template<typename RIGHT, typename=std::enable_if_t<detail_::is_moduloint_v<RIGHT> && same_signedness_v<Moin,RIGHT>>>
 #endif
     constexpr auto&
     operator+=(RIGHT r)  &
@@ -376,7 +376,7 @@ struct [[nodiscard]] Moin{
 #ifdef __cpp_concepts
     template<a_moduloint RIGHT>
 #else
-    template<typename RIGHT, typename=std::enable_if_t<detail_::is_moduloint_v<RIGHT> && same_signedness_v<Moin,RIGHT>,void>>
+    template<typename RIGHT, typename=std::enable_if_t<detail_::is_moduloint_v<RIGHT> && same_signedness_v<Moin,RIGHT>>>
 #endif
     friend constexpr auto
     operator-(Moin l, RIGHT r)
@@ -398,7 +398,7 @@ struct [[nodiscard]] Moin{
 #ifdef __cpp_concepts
     template<a_moduloint RIGHT>
 #else
-    template<typename RIGHT, typename=std::enable_if_t<detail_::is_moduloint_v<RIGHT> && same_signedness_v<Moin,RIGHT>,void>>
+    template<typename RIGHT, typename=std::enable_if_t<detail_::is_moduloint_v<RIGHT> && same_signedness_v<Moin,RIGHT>>>
 #endif
     constexpr auto&
     operator-=(RIGHT r) &
@@ -415,7 +415,7 @@ struct [[nodiscard]] Moin{
 #ifdef __cpp_concepts
     template<a_moduloint RIGHT>
 #else
-    template<typename RIGHT, typename=std::enable_if_t<detail_::is_moduloint_v<RIGHT> && same_signedness_v<Moin,RIGHT>,void>>
+    template<typename RIGHT, typename=std::enable_if_t<detail_::is_moduloint_v<RIGHT> && same_signedness_v<Moin,RIGHT>>>
 #endif
     friend constexpr auto
     operator*(Moin l, RIGHT r)
@@ -464,7 +464,7 @@ struct [[nodiscard]] Moin{
 #ifdef __cpp_concepts
     template<a_moduloint RIGHT>
 #else
-    template<typename RIGHT, typename=std::enable_if_t<detail_::is_moduloint_v<RIGHT> && same_signedness_v<Moin,RIGHT>,void>>
+    template<typename RIGHT, typename=std::enable_if_t<detail_::is_moduloint_v<RIGHT> && same_signedness_v<Moin,RIGHT>>>
 #endif
     constexpr auto&
     operator*=(RIGHT r) &
@@ -494,7 +494,7 @@ struct [[nodiscard]] Moin{
 #ifdef __cpp_concepts
     template<a_moduloint RIGHT>
 #else
-    template<typename RIGHT, typename=std::enable_if_t<detail_::is_moduloint_v<RIGHT> && same_signedness_v<Moin,RIGHT>,void>>
+    template<typename RIGHT, typename=std::enable_if_t<detail_::is_moduloint_v<RIGHT> && same_signedness_v<Moin,RIGHT>>>
 #endif
     friend constexpr auto
     operator/(Moin const l, RIGHT const r)
@@ -546,7 +546,7 @@ struct [[nodiscard]] Moin{
 #ifdef __cpp_concepts
     template<a_moduloint RIGHT>
 #else
-    template<typename RIGHT, typename=std::enable_if_t<detail_::is_moduloint_v<RIGHT> && same_signedness_v<Moin,RIGHT>,void>>
+    template<typename RIGHT, typename=std::enable_if_t<detail_::is_moduloint_v<RIGHT> && same_signedness_v<Moin,RIGHT>>>
 #endif
     constexpr auto&
     operator/=(RIGHT r) &
@@ -576,7 +576,7 @@ struct [[nodiscard]] Moin{
 #ifdef __cpp_concepts
     template<a_moduloint RIGHT>
 #else
-    template<typename RIGHT, typename=std::enable_if_t<detail_::is_moduloint_v<RIGHT> && std::is_unsigned_v<ULT<Moin>> && std::is_unsigned_v<ULT<RIGHT>>,void>>
+    template<typename RIGHT, typename=std::enable_if_t<detail_::is_moduloint_v<RIGHT> && std::is_unsigned_v<ULT<Moin>> && std::is_unsigned_v<ULT<RIGHT>>>>
 #endif
     friend constexpr auto
     operator%(Moin l, RIGHT r)
@@ -598,7 +598,7 @@ struct [[nodiscard]] Moin{
 #ifdef __cpp_concepts
     template<a_moduloint RIGHT>
 #else
-    template<typename RIGHT, typename=std::enable_if_t<detail_::is_moduloint_v<RIGHT> && std::is_unsigned_v<ULT<Moin>> && std::is_unsigned_v<ULT<RIGHT>>,void>>
+    template<typename RIGHT, typename=std::enable_if_t<detail_::is_moduloint_v<RIGHT> && std::is_unsigned_v<ULT<Moin>> && std::is_unsigned_v<ULT<RIGHT>>>>
 #endif
     constexpr auto&
     operator%=(RIGHT r) &
@@ -615,7 +615,7 @@ struct [[nodiscard]] Moin{
 #ifdef __cpp_concepts
     template<a_moduloint RIGHT>
 #else
-    template<typename RIGHT, typename=std::enable_if_t<detail_::is_moduloint_v<RIGHT> && std::is_unsigned_v<ULT<Moin>> && std::is_unsigned_v<ULT<RIGHT>>,void>>
+    template<typename RIGHT, typename=std::enable_if_t<detail_::is_moduloint_v<RIGHT> && std::is_unsigned_v<ULT<Moin>> && std::is_unsigned_v<ULT<RIGHT>>>>
 #endif
     friend constexpr auto
     operator&(Moin l, RIGHT r) noexcept
@@ -629,7 +629,7 @@ struct [[nodiscard]] Moin{
 #ifdef __cpp_concepts
     template<a_moduloint RIGHT>
 #else
-    template<typename RIGHT, typename=std::enable_if_t<detail_::is_moduloint_v<RIGHT> && std::is_unsigned_v<ULT<Moin>> && std::is_unsigned_v<ULT<RIGHT>>,void>>
+    template<typename RIGHT, typename=std::enable_if_t<detail_::is_moduloint_v<RIGHT> && std::is_unsigned_v<ULT<Moin>> && std::is_unsigned_v<ULT<RIGHT>>>>
 #endif
     constexpr auto&
     operator&=(RIGHT r) & noexcept
@@ -645,7 +645,7 @@ struct [[nodiscard]] Moin{
 #ifdef __cpp_concepts
     template<a_moduloint RIGHT>
 #else
-    template<typename RIGHT, typename=std::enable_if_t<detail_::is_moduloint_v<RIGHT> && std::is_unsigned_v<ULT<Moin>> && std::is_unsigned_v<ULT<RIGHT>>,void>>
+    template<typename RIGHT, typename=std::enable_if_t<detail_::is_moduloint_v<RIGHT> && std::is_unsigned_v<ULT<Moin>> && std::is_unsigned_v<ULT<RIGHT>>>>
 #endif
     friend constexpr auto
     operator|(Moin l, RIGHT r) noexcept
@@ -659,7 +659,7 @@ struct [[nodiscard]] Moin{
 #ifdef __cpp_concepts
     template<a_moduloint RIGHT>
 #else
-    template<typename RIGHT, typename=std::enable_if_t<detail_::is_moduloint_v<RIGHT> && std::is_unsigned_v<ULT<Moin>> && std::is_unsigned_v<ULT<RIGHT>>,void>>
+    template<typename RIGHT, typename=std::enable_if_t<detail_::is_moduloint_v<RIGHT> && std::is_unsigned_v<ULT<Moin>> && std::is_unsigned_v<ULT<RIGHT>>>>
 #endif
     constexpr auto&
     operator|=(RIGHT r) & noexcept
@@ -675,7 +675,7 @@ struct [[nodiscard]] Moin{
 #ifdef __cpp_concepts
     template<a_moduloint RIGHT>
 #else
-    template<typename RIGHT, typename=std::enable_if_t<detail_::is_moduloint_v<RIGHT> && std::is_unsigned_v<ULT<Moin>> && std::is_unsigned_v<ULT<RIGHT>>,void>>
+    template<typename RIGHT, typename=std::enable_if_t<detail_::is_moduloint_v<RIGHT> && std::is_unsigned_v<ULT<Moin>> && std::is_unsigned_v<ULT<RIGHT>>>>
 #endif
     friend constexpr auto
     operator^(Moin l, RIGHT r) noexcept
@@ -689,7 +689,7 @@ struct [[nodiscard]] Moin{
 #ifdef __cpp_concepts
     template<a_moduloint RIGHT>
 #else
-    template<typename RIGHT, typename=std::enable_if_t<detail_::is_moduloint_v<RIGHT> && std::is_unsigned_v<ULT<Moin>> && std::is_unsigned_v<ULT<RIGHT>>,void>>
+    template<typename RIGHT, typename=std::enable_if_t<detail_::is_moduloint_v<RIGHT> && std::is_unsigned_v<ULT<Moin>> && std::is_unsigned_v<ULT<RIGHT>>>>
 #endif
     constexpr auto&
     operator^=(RIGHT r) & noexcept
@@ -719,7 +719,7 @@ struct [[nodiscard]] Moin{
 #ifdef __cpp_concepts
     template<a_moduloint RIGHT>
 #else
-    template<typename RIGHT, typename=std::enable_if_t<detail_::is_moduloint_v<RIGHT> && std::is_unsigned_v<ULT<Moin>> && std::is_unsigned_v<ULT<RIGHT>>,void>>
+    template<typename RIGHT, typename=std::enable_if_t<detail_::is_moduloint_v<RIGHT> && std::is_unsigned_v<ULT<Moin>> && std::is_unsigned_v<ULT<RIGHT>>>>
 #endif
     friend constexpr Moin
     operator<<(Moin l, RIGHT r)
@@ -733,7 +733,7 @@ struct [[nodiscard]] Moin{
 #ifdef __cpp_concepts
     template<a_moduloint RIGHT>
 #else
-    template<typename RIGHT, typename=std::enable_if_t<detail_::is_moduloint_v<RIGHT> && std::is_unsigned_v<ULT<Moin>> && std::is_unsigned_v<ULT<RIGHT>>,void>>
+    template<typename RIGHT, typename=std::enable_if_t<detail_::is_moduloint_v<RIGHT> && std::is_unsigned_v<ULT<Moin>> && std::is_unsigned_v<ULT<RIGHT>>>>
 #endif
     constexpr auto&
     operator<<=(RIGHT r) &
@@ -747,7 +747,7 @@ struct [[nodiscard]] Moin{
 #ifdef __cpp_concepts
     template<a_moduloint RIGHT>
 #else
-    template<typename RIGHT, typename=std::enable_if_t<detail_::is_moduloint_v<RIGHT> && std::is_unsigned_v<ULT<Moin>> && std::is_unsigned_v<ULT<RIGHT>>,void>>
+    template<typename RIGHT, typename=std::enable_if_t<detail_::is_moduloint_v<RIGHT> && std::is_unsigned_v<ULT<Moin>> && std::is_unsigned_v<ULT<RIGHT>>>>
 #endif
     friend constexpr Moin
     operator>>(Moin l, RIGHT r)
@@ -761,7 +761,7 @@ struct [[nodiscard]] Moin{
 #ifdef __cpp_concepts
     template<a_moduloint RIGHT>
 #else
-    template<typename RIGHT, typename=std::enable_if_t<detail_::is_moduloint_v<RIGHT> && std::is_unsigned_v<ULT<Moin>> && std::is_unsigned_v<ULT<RIGHT>>,void>>
+    template<typename RIGHT, typename=std::enable_if_t<detail_::is_moduloint_v<RIGHT> && std::is_unsigned_v<ULT<Moin>> && std::is_unsigned_v<ULT<RIGHT>>>>
 #endif
     constexpr auto&
     operator>>=( RIGHT r) &
@@ -892,7 +892,7 @@ auto operator""_si64(unsigned long long value) {
 #ifdef __cpp_concepts
 template<sized_integer T>
 #else
-template<typename T, typename=std::enable_if_t<detail_::is_known_integer_v<T>,void>>
+template<typename T, typename=std::enable_if_t<detail_::is_known_integer_v<T>>>
 #endif
 [[nodiscard]]
 constexpr auto
@@ -913,7 +913,7 @@ from_int(T value) noexcept {
 }
 #ifndef __cpp_concepts
 namespace detail_{
-template<typename type, typename=std::enable_if_t<moins::detail_::is_moduloint_v<type>,void> >
+template<typename type, typename=std::enable_if_t<moins::detail_::is_moduloint_v<type>> >
   struct numeric_limits
   {
     using ult = moins::ULT<type>;
