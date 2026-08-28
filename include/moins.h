@@ -62,10 +62,14 @@ is_compatible_integer_v = std::is_same_v<TESTED,INT> ||
    && (std::is_unsigned_v<INT> == std::is_unsigned_v<TESTED>)
    && std::numeric_limits<TESTED>::max() == std::numeric_limits<INT>::max() );
 
+template<typename TESTED,typename=void>
+constexpr bool
+is_known_integer_v =false;
 // only support the following sizes:
 template<typename TESTED>
 constexpr bool
-is_known_integer_v =    is_compatible_integer_v<std::uint8_t,  TESTED>
+is_known_integer_v<TESTED,std::enable_if_t<std::is_integral_v<TESTED>>> =
+                        is_compatible_integer_v<std::uint8_t,  TESTED>
                      || is_compatible_integer_v<std::uint16_t, TESTED>
                      || is_compatible_integer_v<std::uint32_t, TESTED>
                      || is_compatible_integer_v<std::uint64_t, TESTED>
@@ -74,7 +78,7 @@ is_known_integer_v =    is_compatible_integer_v<std::uint8_t,  TESTED>
                      || is_compatible_integer_v<std::int32_t, TESTED>
                      || is_compatible_integer_v<std::int64_t, TESTED>;
 }
-// deliberately not std::integral, because of bool and characters!
+// deliberately not sized_integer, because of bool and characters!
 #ifdef __cpp_concepts
 template<typename TESTED>
 concept sized_integer = detail_::is_known_integer_v<TESTED>;
@@ -231,9 +235,11 @@ from_int_to(FROM val)
 }
 
 #ifdef __cpp_concepts
+[[nodiscard]]
 constexpr auto to_underlying(moins::a_moduloint auto v){
 #else
 template<typename T, typename=std::enable_if_t<moins::detail_::is_moduloint_v<T>,void>>
+[[nodiscard]]
 constexpr auto to_underlying(T v){
 #endif
     return v.value_which_should_not_be_referred_to_from_user_code;
@@ -250,13 +256,13 @@ struct [[nodiscard]] Moin{
     explicit constexpr Moin(std::same_as<INT> auto v) noexcept:value_which_should_not_be_referred_to_from_user_code(v){
     }
     friend constexpr auto operator<=>(Moin, Moin) noexcept = default;
-    template<std::integral FROM>
+    template<sized_integer FROM>
     explicit constexpr Moin(FROM v)
     requires (not std::same_as<INT,detail_::plain<FROM>>)
     :value_which_should_not_be_referred_to_from_user_code{from_int_to<Moin>(v)}{
     }
 #else
-    template<typename T, typename=std::enable_if_t<std::is_integral_v<T> && not std::is_same_v<T,INT>,void>>
+    template<typename T, typename=std::enable_if_t<detail_::is_known_integer_v<T> && not std::is_same_v<T,INT>,void>>
     explicit constexpr Moin(T v) noexcept
     :value_which_should_not_be_referred_to_from_user_code{from_int_to<Moin>(v)}{}
     explicit constexpr Moin(INT v) noexcept
@@ -429,27 +435,27 @@ struct [[nodiscard]] Moin{
         );
     }
 #ifdef __cpp_concepts
-    template<std::integral RIGHT>
+    template<sized_integer RIGHT>
 #else
     template<typename RIGHT>
 #endif
     friend constexpr auto
     operator*(Moin l, RIGHT r)
 #ifndef __cpp_concepts
-    -> std::enable_if_t<std::is_integral_v<RIGHT>,Moin>
+    -> std::enable_if_t<detail_::is_known_integer_v<RIGHT>,Moin>
 #endif
     {
         return l * from_int_to<Moin>(r);
     }
 #ifdef __cpp_concepts
-    template<std::integral LEFT>
+    template<sized_integer LEFT>
 #else
     template<typename LEFT>
 #endif
     friend constexpr auto
     operator*(LEFT l, Moin r)
 #ifndef __cpp_concepts
-    -> std::enable_if_t<std::is_integral_v<LEFT>,Moin>
+    -> std::enable_if_t<detail_::is_known_integer_v<LEFT>,Moin>
 #endif
     {
         return from_int_to<Moin>(l) * r;
@@ -471,7 +477,7 @@ struct [[nodiscard]] Moin{
         return *this;
     }
 #ifdef __cpp_concepts
-    template<std::integral RIGHT>
+    template<sized_integer RIGHT>
     constexpr auto&
 #else
     template<typename RIGHT>
@@ -479,7 +485,7 @@ struct [[nodiscard]] Moin{
 #endif
     operator*=(RIGHT r) &
 #ifndef __cpp_concepts
-    -> std::enable_if_t<std::is_integral_v<RIGHT>,Moin&>
+    -> std::enable_if_t<detail_::is_known_integer_v<RIGHT>,Moin&>
 #endif
     {
         return *this *= from_int_to<Moin>(r);
@@ -522,14 +528,14 @@ struct [[nodiscard]] Moin{
         }
     }
 #ifdef __cpp_concepts
-    template<std::integral RIGHT>
+    template<sized_integer RIGHT>
 #else
     template<typename RIGHT>
 #endif
     friend constexpr auto
     operator/(Moin const l, RIGHT const r)
 #ifndef __cpp_concepts
-    -> std::enable_if_t<std::is_integral_v<RIGHT>,Moin>
+    -> std::enable_if_t<detail_::is_known_integer_v<RIGHT>,Moin>
 #endif
     {
         return l / from_int_to<Moin>(r);
@@ -553,7 +559,7 @@ struct [[nodiscard]] Moin{
         return *this;
     }
 #ifdef __cpp_concepts
-    template<std::integral RIGHT>
+    template<sized_integer RIGHT>
     constexpr auto&
 #else
     template<typename RIGHT>
@@ -561,7 +567,7 @@ struct [[nodiscard]] Moin{
 #endif
     operator/=(RIGHT r) &
 #ifndef __cpp_concepts
-    -> std::enable_if_t<std::is_integral_v<RIGHT>,Moin&>
+    -> std::enable_if_t<detail_::is_known_integer_v<RIGHT>,Moin&>
 #endif
     {
         return *this /= from_int_to<Moin>(r);
